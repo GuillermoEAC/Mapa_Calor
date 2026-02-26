@@ -1,0 +1,4 @@
+npm install leaflet react-leaflet
+cd frontend
+npm install
+npm create vite@latest frontend -- --template react
