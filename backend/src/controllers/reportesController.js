@@ -68,7 +68,7 @@ const actualizarEstado = async (req, res) => {
         .then(([rows]) => {
           if (rows.length > 0) {
             const { latitud, longitud } = rows[0];
-            return verificarAlertasCercanas(latitud, longitud);
+            return verificarAlertasCercanas(latitud, longitud, id_reporte);
           }
         })
         .catch((err) => {
