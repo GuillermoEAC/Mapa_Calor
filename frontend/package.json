@@ -10,10 +10,16 @@
   },
   "devDependencies": {
     "typescript": "~5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^8.0.0-beta.13"
+  },
+  "overrides": {
+    "vite": "^8.0.0-beta.13"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
-    "react-leaflet": "^5.0.0"
+    "leaflet.heat": "^0.2.0",
+    "lucide-react": "^0.577.0",
+    "react-leaflet": "^5.0.0",
+    "recharts": "^3.8.1"
   }
 }

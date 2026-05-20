@@ -1,0 +1,126 @@
+================================================================================
+     IMPLEMENTACIONES EXTRA NO DOCUMENTADAS EN LOS 14 CASOS DE USO ORIGINALES
+               Sistema Mapa de Calor - Análisis de Código
+================================================================================
+
+FECHA DE ANÁLISIS: Mayo 2026
+
+────────────────────────────────────────────────────────────────────────────────
+CASO DE USO NUEVO DETECTADO (IMPLEMENTADO PERO SIN DOCUMENTAR)
+────────────────────────────────────────────────────────────────────────────────
+
+Tabla 15  Caso de uso 15 Consultar historial de reportes depurados
+
+No. Y nombre de CU:
+    CU-15: Consultar historial de reportes depurados
+
+Fuentes:
+    HistoricoReportes.jsx, reportesController.js
+
+Actor(es):
+    Administrador
+
+Descripción:
+    Permite al administrador consultar todos los reportes que han sido
+    movidos al estado "HISTORICO" por el proceso automático de depuración
+    (CU-9). Ofrece una vista tabular con todos los detalles del reporte
+    original para fines de auditoría y análisis retrospectivo.
+
+Pre-Condiciones:
+    - El administrador debe haber iniciado sesión en el sistema.
+    - Deben existir reportes que hayan sido depurados (más de 30 días
+      de antigüedad y procesados por el cron job de CU-9).
+
+Flujo básico (escenario de éxito):
+    1. El administrador accede al panel de administración.
+    2. Selecciona la pestaña "Historial" en la barra de navegación.
+    3. El sistema solicita al servidor los reportes con estado "HISTORICO".
+    4. El sistema muestra una tabla con: ID, tipo de incidente, descripción,
+       fecha de registro y coordenadas de cada reporte depurado.
+
+Flujo alternativo (escenario de fracaso):
+    3.1. No existen reportes históricos en la base de datos.
+    3.2. El sistema muestra un mensaje: "No hay reportes en el historial
+         todavía."
+
+Post-Condiciones:
+    El administrador puede visualizar los reportes históricos para
+    análisis y auditoría.
+
+Notas:
+    - Los reportes mostrados aquí ya NO aparecen en el mapa de calor
+      principal (solo se muestran los de estado APROBADO).
+    - Este caso de uso complementa directamente al CU-9 (Depurar datos
+      caducos), proporcionando visibilidad sobre los datos depurados.
+
+Archivos del sistema donde está implementado:
+    Frontend: frontend/src/components/HistoricoReportes.jsx
+    Backend:  backend/src/controllers/reportesController.js (obtenerHistorico)
+    Ruta:     GET /api/reportes/historico
+
+
+────────────────────────────────────────────────────────────────────────────────
+FUNCIONALIDAD EXTRA: Insertar datos de prueba
+────────────────────────────────────────────────────────────────────────────────
+
+Descripción:
+    Existe un endpoint GET /api/reportes/datos-prueba que inserta 20
+    reportes ficticios con estado APROBADO alrededor del centro de
+    Los Mochis. Esto es una herramienta de desarrollo/testing y NO
+    requiere un caso de uso formal, pero debe documentarse como
+    funcionalidad técnica.
+
+Archivos:
+    Backend: backend/src/controllers/reportesController.js (insertarDatosPrueba)
+    Ruta:    GET /api/reportes/datos-prueba
+
+
+────────────────────────────────────────────────────────────────────────────────
+FUNCIONALIDAD EXTRA: Obtener todos los reportes
+────────────────────────────────────────────────────────────────────────────────
+
+Descripción:
+    Endpoint GET /api/reportes/todos que devuelve TODOS los reportes
+    de la base de datos sin importar su estado (PENDIENTE, APROBADO,
+    RECHAZADO, HISTORICO). Incluye un conteo total. Este endpoint podría
+    servir para CU-7 (Exportar datos) cuando se implemente.
+
+Archivos:
+    Backend: backend/src/controllers/reportesController.js (obtenerTodos)
+    Ruta:    GET /api/reportes/todos
+
+
+================================================================================
+     CASOS DE USO DOCUMENTADOS PERO NO IMPLEMENTADOS EN EL CÓDIGO
+================================================================================
+
+1. CU-7: Exportar datos espaciales y reportes
+   Estado: NO IMPLEMENTADO
+   Falta:
+   - Endpoint backend para generar archivos CSV/Excel
+   - Componente frontend con botón de exportación y filtros
+   - Librería para generar archivos (ej. xlsx, json2csv)
+   Nota: El endpoint /api/reportes/todos ya existe y podría servir
+         como base de datos para la exportación.
+
+2. CU-11: Compartir zona de riesgo
+   Estado: NO IMPLEMENTADO
+   Falta:
+   - Botón "Compartir" en la interfaz del mapa
+   - Lógica para capturar parámetros de la vista actual del mapa
+     (centro, zoom, filtros activos)
+   - Generación de URL con query parameters
+   - Lectura de query parameters al cargar el mapa
+
+3. CU-14: Suscripción a alertas de zona
+   Estado: NO IMPLEMENTADO
+   Falta:
+   - Tabla en la base de datos para almacenar suscripciones
+     (correo, latitud, longitud, radio de alerta)
+   - Endpoint POST para registrar suscripciones
+   - Componente frontend con formulario de suscripción
+   - Servicio de email (ej. nodemailer) para enviar notificaciones
+   - Lógica para detectar nuevos reportes cercanos a las zonas
+     suscritas y enviar alertas
+
+================================================================================

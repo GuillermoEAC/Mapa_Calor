@@ -1,0 +1,27 @@
+RECOMENDACIONES DE MEJORA - SISTEMA MAPA DE CALOR
+
+1. Seguridad y Backend
+----------------------
+* Autenticación con JWT: Implementar JSON Web Tokens para sesiones de administrador seguras.
+* Encriptación de Contraseñas: Usar bcrypt para no guardar contraseñas en texto plano.
+* Validación de Datos: Validar coordenadas y descripciones en el backend (ej. express-validator).
+* Soporte para Imágenes: Permitir subir fotos de evidencia usando multer.
+* Rate Limiting: Evitar spam de reportes limitando peticiones por IP.
+
+2. Experiencia de Usuario (Frontend)
+------------------------------------
+* Heatmap Real: Usar react-leaflet-heatmap-layer para una visualización de densidad real.
+* Diseño Premium:
+    - Aplicar Glassmorphism en paneles y modales.
+    - Mejorar tipografía (Inter, Outfit).
+    - Micro-animaciones con framer-motion.
+* Dashboard de Estadísticas: Gráficas de tendencias e incidentes frecuentes (Recharts/Chart.js).
+* Estados de Carga: Skeletons o spinners mientras se cargan los datos.
+
+3. Funcionalidades Avanzadas
+----------------------------
+* Tiempo Real: Socket.io para actualizaciones instantáneas en el panel admin.
+* Búsqueda por Dirección: Buscador con Geocoding para saltar a zonas específicas.
+* PWA: Hacer la app instalable en móviles.
+* Filtro Temporal: Ver reportes por rangos de fechas (ej. "últimos 30 días").
+* Clasificación por IA: Sugerir categoría basada en la descripción automáticamente.
