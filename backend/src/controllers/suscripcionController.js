@@ -13,16 +13,19 @@ const calcularDistancia = (lat1, lon1, lat2, lon2) => {
 };
 
 const crearSuscripcion = async (req, res) => {
+  console.log("[DEBUG Suscripcion] Body recibido:", req.body);
   const { correo_notificacion, latitud_zona, longitud_zona, radio_cobertura_metros } = req.body;
 
   // Validaciones
   if (!correo_notificacion || !latitud_zona || !longitud_zona || !radio_cobertura_metros) {
+    console.log("[DEBUG Suscripcion] Faltan campos obligatorios");
     return res.status(400).json({ error: "Todos los campos son obligatorios" });
   }
 
   // Validar formato de correo
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(correo_notificacion)) {
+    console.log("[DEBUG Suscripcion] Correo inválido:", correo_notificacion);
     return res.status(400).json({ error: "Formato de correo electrónico inválido" });
   }
 

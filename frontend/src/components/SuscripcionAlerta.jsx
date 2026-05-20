@@ -1,62 +1,104 @@
 import React, { useState } from "react";
-import { Bell, Mail, X } from "lucide-react";
+import { Bell, Mail, X, Navigation, AlertCircle, CheckCircle, ShieldAlert } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CU-14: Suscripción a Alertas de Zona
+// CU-14: Suscripción a Alertas de Zona con UI Glassmorphic Premium y Robusta
 // ─────────────────────────────────────────────────────────────────────────────
 const SuscripcionAlerta = ({ isOpen, onClose }) => {
   const [correo, setCorreo] = useState("");
   const [radio, setRadio] = useState("500");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
+  const [exito, setExito] = useState(false);
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
     setError("");
+    setExito(false);
+
+    const correoLimpio = correo.trim();
+    if (!correoLimpio) {
+      setError("Por favor ingresa un correo electrónico.");
+      return;
+    }
+
+    // Validar formato de correo en el frontend para evitar llamadas fallidas
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(correoLimpio)) {
+      setError("El formato del correo electrónico no es válido.");
+      return;
+    }
+
     setCargando(true);
 
-    // Obtener ubicación del usuario
     if (!("geolocation" in navigator)) {
-      setError("Tu navegador no soporta geolocalización.");
+      setError("Tu navegador no soporta geolocalización o está deshabilitada.");
       setCargando(false);
       return;
     }
 
+    // Opciones para obtener alta precisión y un timeout razonable
+    const opcionesGeo = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    };
+
     navigator.geolocation.getCurrentPosition(
       async (posicion) => {
         const { latitude, longitude } = posicion.coords;
+
+        if (!latitude || !longitude) {
+          setError("No se pudieron obtener coordenadas geográficas válidas.");
+          setCargando(false);
+          return;
+        }
 
         try {
           const respuesta = await fetch("http://localhost:3000/api/suscripciones", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              correo,
-              latitud: latitude,
-              longitud: longitude,
-              radio: parseInt(radio),
+              correo_notificacion: correoLimpio,
+              latitud_zona: latitude,
+              longitud_zona: longitude,
+              radio_cobertura_metros: parseInt(radio),
             }),
           });
 
+          const data = await respuesta.json().catch(() => null);
+
           if (respuesta.ok) {
-            alert("¡Suscripción exitosa! Recibirás alertas en tu correo cuando haya incidentes cerca de tu ubicación.");
+            setExito(true);
             setCorreo("");
             setRadio("500");
-            onClose();
+            setTimeout(() => {
+              setExito(false);
+              onClose();
+            }, 3500);
           } else {
-            const data = await respuesta.json().catch(() => null);
-            setError(data?.mensaje || "Error al registrar la suscripción. Intenta de nuevo.");
+            setError(data?.error || data?.mensaje || "Error al registrar la suscripción en el servidor.");
           }
         } catch (err) {
-          setError("No se pudo conectar con el servidor.");
+          setError("No se pudo establecer conexión con el servidor. Verifica tu conexión de red.");
         } finally {
           setCargando(false);
         }
       },
       (err) => {
-        setError("No pudimos obtener tu ubicación. Por favor, permite el acceso a la ubicación en tu navegador.");
+        console.error("Error de geolocalización:", err);
+        let msg = "No pudimos obtener tu ubicación.";
+        if (err.code === 1) {
+          msg = "Permiso denegado. Por favor, permite el acceso a la ubicación en la barra de direcciones de tu navegador para poder suscribirte a esta zona.";
+        } else if (err.code === 2) {
+          msg = "La ubicación no está disponible actualmente. Intenta de nuevo o verifica tu GPS/red.";
+        } else if (err.code === 3) {
+          msg = "Tiempo de espera agotado al obtener la ubicación. Intenta de nuevo.";
+        }
+        setError(msg);
         setCargando(false);
-      }
+      },
+      opcionesGeo
     );
   };
 
@@ -70,154 +112,244 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: "rgba(0,0,0,0.6)",
+        backgroundColor: "rgba(8, 12, 24, 0.75)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         zIndex: 2000,
-        backdropFilter: "blur(4px)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        padding: "20px"
       }}
     >
       <div
+        className="glass-card animate-fade-in"
         style={{
-          backgroundColor: "white",
-          width: "90%",
-          maxWidth: "450px",
-          borderRadius: "16px",
-          padding: "25px",
-          boxShadow: "0 20px 25px -5px rgba(0,0,0,0.2)",
+          width: "100%",
+          maxWidth: "480px",
+          padding: "30px",
+          position: "relative",
+          background: "linear-gradient(135deg, rgba(23, 37, 84, 0.4) 0%, rgba(15, 23, 42, 0.9) 100%)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(139, 92, 246, 0.1)"
         }}
       >
+        {/* Glow decorativo de fondo */}
+        <div style={{
+          position: "absolute",
+          top: "-50px",
+          right: "-50px",
+          width: "150px",
+          height: "150px",
+          background: "radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%)",
+          zIndex: -1,
+          pointerEvents: "none"
+        }} />
+
         {/* Encabezado */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px", color: "#8B5CF6" }}>
-            <Bell /> Alertas de Zona
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+          <h2 style={{ 
+            margin: 0, 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "12px", 
+            color: "#f8fafc",
+            fontSize: "22px",
+            fontWeight: 800,
+            letterSpacing: "-0.5px"
+          }}>
+            <span style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "40px",
+              height: "40px",
+              borderRadius: "12px",
+              background: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
+              boxShadow: "0 4px 15px rgba(124, 58, 237, 0.35)",
+              color: "white"
+            }}>
+              <Bell size={20} />
+            </span>
+            Alertas de Zona
           </h2>
           <button
             onClick={onClose}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#64748B" }}
+            style={{ 
+              background: "rgba(255, 255, 255, 0.05)", 
+              border: "1px solid rgba(255, 255, 255, 0.1)", 
+              borderRadius: "10px",
+              cursor: "pointer", 
+              color: "#94a3b8",
+              width: "32px",
+              height: "32px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"; }}
           >
-            <X size={24} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Info */}
-        <div
-          style={{
-            backgroundColor: "#F5F3FF",
-            border: "1px solid #DDD6FE",
-            borderRadius: "10px",
-            padding: "12px 15px",
-            marginBottom: "20px",
-            fontSize: "13px",
-            color: "#5B21B6",
-            lineHeight: "1.5",
-          }}
-        >
-          Se utilizará tu ubicación actual para definir la zona de alerta. Recibirás un correo cuando se apruebe un reporte dentro del radio seleccionado.
-        </div>
-
-        <form onSubmit={manejarEnvio} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-          {/* Email */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{ fontWeight: "bold", fontSize: "14px", color: "#1E293B", display: "flex", alignItems: "center", gap: "6px" }}>
-              <Mail size={16} color="#64748B" /> Correo electrónico
-            </label>
-            <input
-              type="email"
-              required
-              placeholder="tucorreo@ejemplo.com"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
-              style={{
-                padding: "10px 12px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                fontSize: "14px",
-              }}
-            />
+        {exito ? (
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            padding: "20px 0",
+            animation: "fadeIn 0.4s ease"
+          }}>
+            <div style={{
+              width: "70px",
+              height: "70px",
+              borderRadius: "50%",
+              backgroundColor: "rgba(16, 185, 129, 0.15)",
+              border: "2px solid #10b981",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "20px",
+              color: "#10b981",
+              boxShadow: "0 0 20px rgba(16, 185, 129, 0.3)"
+            }}>
+              <CheckCircle size={40} />
+            </div>
+            <h3 style={{ color: "#f8fafc", margin: "0 0 10px 0", fontSize: "18px", fontWeight: "700" }}>
+              ¡Suscripción Activada!
+            </h3>
+            <p style={{ color: "#94a3b8", fontSize: "14px", margin: 0, lineHeight: "1.6", maxWidth: "340px" }}>
+              Hemos configurado con éxito la zona de monitoreo en tu geolocalización actual. Recibirás avisos instantáneos en tu correo cuando un incidente sea aprobado en tu área.
+            </p>
           </div>
-
-          {/* Radio */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{ fontWeight: "bold", fontSize: "14px", color: "#1E293B" }}>
-              Radio de alerta
-            </label>
-            <select
-              value={radio}
-              onChange={(e) => setRadio(e.target.value)}
-              style={{
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                fontSize: "14px",
-                backgroundColor: "white",
-                cursor: "pointer",
-              }}
-            >
-              <option value="250">250 metros</option>
-              <option value="500">500 metros</option>
-              <option value="1000">1,000 metros (1 km)</option>
-              <option value="2000">2,000 metros (2 km)</option>
-            </select>
-          </div>
-
-          {/* Error */}
-          {error && (
+        ) : (
+          <>
+            {/* Mensaje Informativo */}
             <div
               style={{
-                backgroundColor: "#FEF2F2",
-                border: "1px solid #FCA5A5",
-                borderRadius: "8px",
-                padding: "10px 14px",
-                fontSize: "13px",
-                color: "#991B1B",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          {/* Botones */}
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "5px" }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                padding: "10px 15px",
-                border: "none",
-                backgroundColor: "#e2e8f0",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={cargando}
-              style={{
-                padding: "10px 20px",
-                border: "none",
-                backgroundColor: "#8B5CF6",
-                color: "white",
-                borderRadius: "5px",
-                cursor: cargando ? "not-allowed" : "pointer",
-                fontWeight: "bold",
-                opacity: cargando ? 0.7 : 1,
+                backgroundColor: "rgba(124, 58, 237, 0.1)",
+                border: "1px solid rgba(139, 92, 246, 0.2)",
+                borderRadius: "12px",
+                padding: "15px 18px",
+                marginBottom: "22px",
+                fontSize: "13.5px",
+                color: "#ddd6fe",
+                lineHeight: "1.6",
                 display: "flex",
-                alignItems: "center",
-                gap: "8px",
+                gap: "12px",
+                alignItems: "flex-start"
               }}
             >
-              <Bell size={16} />
-              {cargando ? "Registrando..." : "Suscribirse"}
-            </button>
-          </div>
-        </form>
+              <Navigation size={18} style={{ color: "#a78bfa", marginTop: "2px", flexShrink: 0 }} />
+              <div>
+                Utilizaremos tu <strong>ubicación en tiempo real</strong> para definir el centro de la zona de monitoreo. Te enviaremos un correo al instante si se reporta peligro dentro de tu radio seleccionado.
+              </div>
+            </div>
 
-        <p style={{ marginTop: "20px", fontSize: "12px", color: "#94A3B8", textAlign: "center" }}>
-          Puedes cancelar tu suscripción en cualquier momento desde el enlace en tu correo.
+            <form onSubmit={manejarEnvio} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              {/* Campo Email */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontWeight: "600", fontSize: "14px", color: "#e2e8f0", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Mail size={15} color="#94a3b8" /> Correo electrónico de destino
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="ejemplo@correo.com"
+                  value={correo}
+                  onChange={(e) => setCorreo(e.target.value)}
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    fontSize: "14px",
+                    width: "100%",
+                    outline: "none"
+                  }}
+                />
+              </div>
+
+              {/* Campo Radio */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontWeight: "600", fontSize: "14px", color: "#e2e8f0" }}>
+                  Radio de cobertura de alerta
+                </label>
+                <select
+                  value={radio}
+                  onChange={(e) => setRadio(e.target.value)}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "10px",
+                    fontSize: "14px",
+                    width: "100%",
+                    cursor: "pointer",
+                    outline: "none"
+                  }}
+                >
+                  <option value="250">250 metros (Zonal cercano)</option>
+                  <option value="500">500 metros (Radio medio)</option>
+                  <option value="1000">1,000 metros (1 km)</option>
+                  <option value="2000">2,000 metros (2 km - Rango amplio)</option>
+                </select>
+              </div>
+
+              {/* Errores */}
+              {error && (
+                <div
+                  style={{
+                    backgroundColor: "rgba(239, 68, 68, 0.12)",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    borderRadius: "10px",
+                    padding: "12px 16px",
+                    fontSize: "13px",
+                    color: "#fca5a5",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "10px",
+                    animation: "fadeIn 0.25s ease"
+                  }}
+                >
+                  <AlertCircle size={18} style={{ color: "#f87171", flexShrink: 0, marginTop: "1px" }} />
+                  <span style={{ lineHeight: "1.5" }}>{error}</span>
+                </div>
+              )}
+
+              {/* Acciones */}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "8px" }}>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-premium btn-secondary"
+                  style={{
+                    padding: "12px 20px",
+                    fontSize: "14px"
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={cargando}
+                  className="btn-premium btn-purple"
+                  style={{
+                    padding: "12px 24px",
+                    fontSize: "14px",
+                    opacity: cargando ? 0.75 : 1,
+                    cursor: cargando ? "not-allowed" : "pointer"
+                  }}
+                >
+                  <Bell size={16} />
+                  {cargando ? "Obteniendo ubicación..." : "Activar Alertas"}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+
+        <p style={{ marginTop: "24px", fontSize: "12px", color: "#64748b", textAlign: "center", lineHeight: "1.5" }}>
+          Las notificaciones se envían de forma automática y anónima. Puedes desuscribirte en cualquier momento desde el enlace incluido al pie de cada alerta.
         </p>
       </div>
     </div>

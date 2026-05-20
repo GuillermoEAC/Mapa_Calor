@@ -119,52 +119,56 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     <div style={{ position: "relative", height: "100%", width: "100%" }}>
       
       {/* ─────────────────────────────────────────────────────────────────────────────
-          Panel flotante de Filtros
+          Panel flotante de Filtros - UI Glassmorphic Oscuro
           ───────────────────────────────────────────────────────────────────────────── */}
       <div 
+        className="glass-card animate-fade-in"
         style={{
           position: "absolute",
           top: "20px",
           right: "20px",
           zIndex: 1000,
-          backgroundColor: "white",
-          padding: "15px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.15)",
+          padding: "20px",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
           display: "flex",
           flexDirection: "column",
-          gap: "10px",
-          minWidth: "200px"
+          gap: "12px",
+          minWidth: "240px",
+          background: "rgba(15, 23, 42, 0.85)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
         }}
       >
-        <h3 style={{ margin: 0, fontSize: "16px", color: "#1E293B" }}>Filtrar Mapa</h3>
+        <h3 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: "800", color: "#f8fafc", letterSpacing: "1px", textTransform: "uppercase" }}>Filtrar Mapa</h3>
         
-        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", fontSize: "13.5px", color: "#cbd5e1", padding: "6px 10px", borderRadius: "8px", background: filtroActivo === "todos" ? "rgba(255,255,255,0.06)" : "transparent" }}>
           <input 
             type="radio" 
             name="filtro_mapa" 
             checked={filtroActivo === "todos"} 
             onChange={() => setFiltroActivo("todos")} 
+            style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "#8b5cf6" }}
           />
-          Todos
+          <span style={{ fontWeight: filtroActivo === "todos" ? "600" : "400" }}>Todos los incidentes</span>
         </label>
 
         {Object.entries(TIPOS_INCIDENTES).map(([id, info]) => (
-          <label key={id} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px" }}>
+          <label key={id} style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", fontSize: "13.5px", color: "#cbd5e1", padding: "6px 10px", borderRadius: "8px", background: filtroActivo === id ? "rgba(255,255,255,0.06)" : "transparent" }}>
             <input 
               type="radio" 
               name="filtro_mapa" 
               checked={filtroActivo === id} 
               onChange={() => setFiltroActivo(id)} 
+              style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "#8b5cf6" }}
             />
             <span style={{ 
               display: "inline-block", 
-              width: "12px", 
-              height: "12px", 
+              width: "10px", 
+              height: "10px", 
               borderRadius: "50%", 
-              backgroundColor: info.color 
+              backgroundColor: info.color,
+              boxShadow: `0 0 8px ${info.color}`
             }}></span>
-            {info.nombre}
+            <span style={{ fontWeight: filtroActivo === id ? "600" : "400" }}>{info.nombre}</span>
           </label>
         ))}
       </div>
@@ -239,48 +243,49 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
           ───────────────────────────────────────────────────────────────────────────── */}
       <button
         onClick={compartirVista}
+        className="btn-premium btn-primary"
         style={{
           position: "absolute",
           bottom: "30px",
           left: "20px",
           zIndex: 1000,
-          backgroundColor: "#3B82F6",
-          color: "white",
-          border: "none",
-          padding: "10px 18px",
-          borderRadius: "8px",
-          fontWeight: "bold",
-          cursor: "pointer",
+          padding: "12px 22px",
           fontSize: "14px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+          boxShadow: "0 10px 25px rgba(59, 130, 246, 0.35)",
         }}
       >
-        <Share2 size={18} />
+        <Share2 size={16} />
         Compartir Vista
       </button>
 
       {/* Toast "¡Enlace copiado!" */}
       {toastVisible && (
         <div
+          className="animate-fade-in"
           style={{
             position: "absolute",
-            bottom: "80px",
+            bottom: "88px",
             left: "20px",
             zIndex: 1000,
-            backgroundColor: "#10B981",
+            backgroundColor: "rgba(16, 185, 129, 0.95)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
             color: "white",
-            padding: "10px 20px",
-            borderRadius: "8px",
-            fontSize: "14px",
+            padding: "10px 18px",
+            borderRadius: "10px",
+            fontSize: "13.5px",
             fontWeight: "600",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.15)",
-            animation: "fadeIn 0.3s ease",
+            boxShadow: "0 10px 25px rgba(16, 185, 129, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
           }}
         >
-          ¡Enlace copiado!
+          <span style={{ display: "inline-flex", padding: "3px", borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.2)" }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          ¡Enlace copiado al portapapeles!
         </div>
       )}
     </div>

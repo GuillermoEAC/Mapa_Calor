@@ -81,84 +81,159 @@ function App() {
     }
 
     return (
-      <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "#f8fafc" }}>
-        <header style={{ backgroundColor: "#1E293B", padding: "10px 30px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", gap: "15px" }}>
-            <button onClick={() => setVistaActual("mapa")} style={{ padding: "8px 15px", cursor: "pointer", borderRadius: "5px", border: "none", display: "flex", alignItems: "center", gap: "5px" }}>
+      <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "#0f172a" }}>
+        <header className="glass-header" style={{ padding: "15px 30px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 1000 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
+            <button 
+              onClick={() => setVistaActual("mapa")} 
+              className="btn-premium btn-secondary"
+              style={{ padding: "10px 18px", fontSize: "14px" }}
+            >
               <ArrowLeft size={16} /> Volver al Mapa
             </button>
-            <nav style={{ display: "flex", gap: "5px" }}>
+            <nav style={{ display: "flex", gap: "8px" }}>
               <button 
                 onClick={() => setSeccionAdmin("moderacion")}
-                style={{ backgroundColor: seccionAdmin === "moderacion" ? "#3B82F6" : "transparent", color: "white", border: "none", padding: "8px 15px", borderRadius: "5px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}
+                className={`btn-premium ${seccionAdmin === "moderacion" ? "btn-primary" : "btn-secondary"}`}
+                style={{ padding: "10px 18px", fontSize: "14px" }}
               >
                 <ListFilter size={16} /> Moderación
               </button>
               <button 
                 onClick={() => setSeccionAdmin("estadisticas")}
-                style={{ backgroundColor: seccionAdmin === "estadisticas" ? "#3B82F6" : "transparent", color: "white", border: "none", padding: "8px 15px", borderRadius: "5px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}
+                className={`btn-premium ${seccionAdmin === "estadisticas" ? "btn-primary" : "btn-secondary"}`}
+                style={{ padding: "10px 18px", fontSize: "14px" }}
               >
                 <BarChart3 size={16} /> Estadísticas
               </button>
               <button 
                 onClick={() => setSeccionAdmin("config")}
-                style={{ backgroundColor: seccionAdmin === "config" ? "#3B82F6" : "transparent", color: "white", border: "none", padding: "8px 15px", borderRadius: "5px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}
+                className={`btn-premium ${seccionAdmin === "config" ? "btn-primary" : "btn-secondary"}`}
+                style={{ padding: "10px 18px", fontSize: "14px" }}
               >
                 <Settings size={16} /> Configuración
               </button>
               <button 
                 onClick={() => setSeccionAdmin("historico")}
-                style={{ backgroundColor: seccionAdmin === "historico" ? "#3B82F6" : "transparent", color: "white", border: "none", padding: "8px 15px", borderRadius: "5px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}
+                className={`btn-premium ${seccionAdmin === "historico" ? "btn-primary" : "btn-secondary"}`}
+                style={{ padding: "10px 18px", fontSize: "14px" }}
               >
                 <History size={16} /> Historial
               </button>
               <button 
                 onClick={() => setSeccionAdmin("exportar")}
-                style={{ backgroundColor: seccionAdmin === "exportar" ? "#3B82F6" : "transparent", color: "white", border: "none", padding: "8px 15px", borderRadius: "5px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}
+                className={`btn-premium ${seccionAdmin === "exportar" ? "btn-primary" : "btn-secondary"}`}
+                style={{ padding: "10px 18px", fontSize: "14px" }}
               >
                 <Download size={16} /> Exportar
               </button>
             </nav>
           </div>
-          <button onClick={() => setAdminAutenticado(false)} style={{ backgroundColor: "#EF4444", color: "white", border: "none", padding: "8px 15px", borderRadius: "5px", cursor: "pointer" }}>
+          <button 
+            onClick={() => setAdminAutenticado(false)} 
+            className="btn-premium btn-danger"
+            style={{ padding: "10px 18px", fontSize: "14px" }}
+          >
             Cerrar Sesión
           </button>
         </header>
-        <main style={{ flex: 1, overflowY: "auto" }}>
-          {seccionAdmin === "moderacion" && <PanelAdmin />}
-          {seccionAdmin === "estadisticas" && <Estadisticas />}
-          {seccionAdmin === "config" && <ConfiguracionMapa />}
-          {seccionAdmin === "historico" && <HistoricoReportes />}
-          {seccionAdmin === "exportar" && <ExportarReportes />}
+        <main style={{ flex: 1, overflowY: "auto", padding: "20px", backgroundColor: "#0f172a" }}>
+          <div className="animate-fade-in" style={{ height: "100%" }}>
+            {seccionAdmin === "moderacion" && <PanelAdmin />}
+            {seccionAdmin === "estadisticas" && <Estadisticas />}
+            {seccionAdmin === "config" && <ConfiguracionMapa />}
+            {seccionAdmin === "historico" && <HistoricoReportes />}
+            {seccionAdmin === "exportar" && <ExportarReportes />}
+          </div>
         </main>
       </div>
     );
   }
 
   return (
-    <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column" }}>
-      <header style={{ backgroundColor: "#1E293B", color: "white", padding: "15px 30px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)", zIndex: 1000 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <h1 style={{ margin: 0, fontSize: "24px" }}>Mapa de Inseguridad</h1>
-          <button onClick={() => setVistaActual("admin")} style={{ backgroundColor: "#3B82F6", color: "white", border: "none", padding: "8px 15px", borderRadius: "5px", cursor: "pointer", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <Shield size={16} /> Panel Admin
+    <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "#0b0f19" }}>
+      <header className="glass-header" style={{ padding: "18px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 1000, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)", position: "relative" }}>
+        {/* Glow sutil en el header */}
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: "10%",
+          width: "300px",
+          height: "2px",
+          background: "linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent)",
+          pointerEvents: "none"
+        }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
+          {/* Logo Premium */}
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "44px",
+              height: "44px",
+              borderRadius: "14px",
+              background: "linear-gradient(135deg, #ef4444 0%, #8b5cf6 100%)",
+              boxShadow: "0 0 25px rgba(139, 92, 246, 0.35)",
+              color: "white"
+            }}>
+              <Shield size={22} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <h1 style={{ 
+                margin: 0, 
+                fontSize: "24px", 
+                fontWeight: 900, 
+                letterSpacing: "-0.75px",
+                background: "linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                lineHeight: "1.1"
+              }}>
+                Mapa de Inseguridad
+              </h1>
+              <span style={{ fontSize: "10px", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.8px", marginTop: "3px" }}>
+                Monitoreo Colaborativo
+              </span>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => setVistaActual("admin")} 
+            className="btn-premium btn-secondary"
+            style={{ padding: "8px 16px", fontSize: "13px", height: "36px" }}
+          >
+            <Shield size={14} /> Panel Admin
           </button>
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={() => setAlertasAbierto(true)} style={{ backgroundColor: "#8B5CF6", color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <Bell size={20} /> Alertas de Zona
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <button 
+            onClick={() => setAlertasAbierto(true)} 
+            className="btn-premium btn-purple"
+            style={{ padding: "11px 22px", fontSize: "14px", height: "42px" }}
+          >
+            <Bell size={16} /> Alertas de Zona
           </button>
-          <button onClick={() => setEmergenciasAbierto(true)} style={{ backgroundColor: "#FFA500", color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <PhoneCall size={20} /> Emergencias
+          <button 
+            onClick={() => setEmergenciasAbierto(true)} 
+            className="btn-premium btn-warning"
+            style={{ padding: "11px 22px", fontSize: "14px", height: "42px" }}
+          >
+            <PhoneCall size={16} /> Emergencias
           </button>
-          <button onClick={manejarClickReportar} style={{ backgroundColor: "#EF4444", color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <AlertTriangle size={20} /> Reportar Incidente
+          <button 
+            onClick={manejarClickReportar} 
+            className="btn-premium btn-danger pulse-glow"
+            style={{ padding: "11px 24px", fontSize: "14px", height: "42px", fontWeight: "700" }}
+          >
+            <AlertTriangle size={16} /> Reportar Incidente
           </button>
         </div>
       </header>
 
-      <main style={{ flex: 1, display: "flex", width: "100vw" }}>
+      <main style={{ flex: 1, display: "flex", width: "100vw", overflow: "hidden" }}>
         <MapaInteractivo ubicacionTemporal={ubicacionUsuario} onMapClick={manejarClickMapa} compartirParams={compartirParams} />
       </main>
 
