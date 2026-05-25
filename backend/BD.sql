@@ -45,7 +45,7 @@ CREATE TABLE Suscripcion_Alerta (
 
 -- 7. Insertamos los datos de prueba
 INSERT INTO Administrador (correo, contrasena) 
-VALUES ('admin@tuproyecto.com', '123456');
+VALUES ('admin@tuproyecto.com', '123456'), ('admin', '123456');
 
 INSERT INTO Tipo_Incidente (nombre, color_mapa, intensidad_huella) VALUES 
 ('Robo / Asalto', 'red', 3),

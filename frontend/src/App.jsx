@@ -16,9 +16,24 @@ function App() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [emergenciasAbierto, setEmergenciasAbierto] = useState(false);
   const [alertasAbierto, setAlertasAbierto] = useState(false);
-  const [vistaActual, setVistaActual] = useState("mapa"); // mapa, admin
+  const [vistaActual, setVistaActual] = useState(
+    window.location.pathname === "/admin" ? "admin" : "mapa"
+  ); // mapa, admin
   const [seccionAdmin, setSeccionAdmin] = useState("moderacion"); // moderacion, estadisticas, config, historico, exportar
   const [adminAutenticado, setAdminAutenticado] = useState(false);
+
+  // Acceso rápido de administrador mediante combinación de teclas (Ctrl + Alt + A)
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        window.history.pushState({}, '', '/admin');
+        setVistaActual((prev) => (prev === "admin" ? "mapa" : "admin"));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // CU-11: Parsear parámetros de URL para compartir vista del mapa
   const urlParams = new URLSearchParams(window.location.search);
@@ -30,18 +45,38 @@ function App() {
   } : null;
 
   const manejarClickReportar = () => {
+    // Límites geográficos de Los Mochis y ejidos aledaños (~25km radio)
+    const LIMITES = { latMin: 25.50, latMax: 26.10, lngMin: -109.30, lngMax: -108.70 };
+    const centroLosMochis = [25.7904, -108.9858];
+
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (posicion) => {
           const { latitude, longitude } = posicion.coords;
-          setUbicacionUsuario([latitude, longitude]);
-          setModalAbierto(true);
+          
+          // Si el GPS está fuera de cobertura, usar el centro del mapa
+          if (
+            latitude < LIMITES.latMin || latitude > LIMITES.latMax ||
+            longitude < LIMITES.lngMin || longitude > LIMITES.lngMax
+          ) {
+            alert("Tu ubicación GPS está fuera del área de cobertura de la aplicación. Haz clic en el mapa para seleccionar el punto exacto donde ocurrió el incidente.");
+            setUbicacionUsuario(centroLosMochis);
+            setModalAbierto(true);
+          } else {
+            setUbicacionUsuario([latitude, longitude]);
+            setModalAbierto(true);
+          }
         },
-        (error) =>
-          alert("No pudimos obtener tu ubicación. Por favor, asegura de darle permisos al navegador.")
+        (error) => {
+          alert("No pudimos obtener tu ubicación. Haz clic en el mapa para seleccionar el punto del incidente.");
+          setUbicacionUsuario(centroLosMochis);
+          setModalAbierto(true);
+        }
       );
     } else {
-      alert("Tu navegador no soporta geolocalización.");
+      alert("Tu navegador no soporta geolocalización. Haz clic en el mapa para seleccionar el punto del incidente.");
+      setUbicacionUsuario(centroLosMochis);
+      setModalAbierto(true);
     }
   };
 
@@ -58,12 +93,14 @@ function App() {
         body: JSON.stringify(datos),
       });
 
+      const resultado = await respuesta.json();
+
       if (respuesta.ok) {
         alert("Reporte enviado a moderacion. Gracias por tu colaboracion ciudadana.");
         setModalAbierto(false);
         setUbicacionUsuario(null);
       } else {
-        alert("Hubo un problema al guardar el reporte.");
+        alert(resultado.error || "Hubo un problema al guardar el reporte.");
       }
     } catch (error) {
       alert("No se pudo conectar con el servidor.");
@@ -75,7 +112,7 @@ function App() {
       return (
         <LoginAdmin
           onLoginSuccess={() => setAdminAutenticado(true)}
-          onCancelar={() => setVistaActual("mapa")}
+          onCancelar={() => { window.history.pushState({}, '', '/'); setVistaActual("mapa"); }}
         />
       );
     }
@@ -85,7 +122,7 @@ function App() {
         <header className="glass-header" style={{ padding: "15px 30px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 1000 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
             <button 
-              onClick={() => setVistaActual("mapa")} 
+              onClick={() => { window.history.pushState({}, '', '/'); setVistaActual("mapa"); }} 
               className="btn-premium btn-secondary"
               style={{ padding: "10px 18px", fontSize: "14px" }}
             >
@@ -130,7 +167,7 @@ function App() {
             </nav>
           </div>
           <button 
-            onClick={() => setAdminAutenticado(false)} 
+            onClick={() => { setAdminAutenticado(false); window.history.pushState({}, '', '/'); setVistaActual("mapa"); }} 
             className="btn-premium btn-danger"
             style={{ padding: "10px 18px", fontSize: "14px" }}
           >
@@ -199,36 +236,33 @@ function App() {
             </div>
           </div>
 
-          <button 
-            onClick={() => setVistaActual("admin")} 
-            className="btn-premium btn-secondary"
-            style={{ padding: "8px 16px", fontSize: "13px", height: "36px" }}
-          >
-            <Shield size={14} /> Panel Admin
-          </button>
+
         </div>
 
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <button 
             onClick={() => setAlertasAbierto(true)} 
             className="btn-premium btn-purple"
-            style={{ padding: "11px 22px", fontSize: "14px", height: "42px" }}
+            title="Alertas de Zona"
+            style={{ width: "42px", height: "42px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
           >
-            <Bell size={16} /> Alertas de Zona
+            <Bell size={18} />
           </button>
           <button 
             onClick={() => setEmergenciasAbierto(true)} 
             className="btn-premium btn-warning"
-            style={{ padding: "11px 22px", fontSize: "14px", height: "42px" }}
+            title="Emergencias"
+            style={{ width: "42px", height: "42px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
           >
-            <PhoneCall size={16} /> Emergencias
+            <PhoneCall size={18} />
           </button>
           <button 
             onClick={manejarClickReportar} 
             className="btn-premium btn-danger pulse-glow"
-            style={{ padding: "11px 24px", fontSize: "14px", height: "42px", fontWeight: "700" }}
+            title="Reportar Incidente"
+            style={{ width: "42px", height: "42px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
           >
-            <AlertTriangle size={16} /> Reportar Incidente
+            <AlertTriangle size={18} />
           </button>
         </div>
       </header>

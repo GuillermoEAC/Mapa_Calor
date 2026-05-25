@@ -20,10 +20,68 @@ body,
   background-color: #0f172a;
 }
 
-/* Transiciones generales */
+/* Transiciones generales (optimizado para evitar lag en Leaflet) */
 * {
   box-sizing: border-box;
+}
+
+/* Transiciones específicas para UI elements (evitando las capas dinámicas del mapa de Leaflet para evitar lag severo) */
+a, button, input, select, textarea, .glass-card, .btn-premium {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estilos para los Marcadores Personalizados Premium */
+.custom-leaflet-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-marker-wrapper {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  z-index: 2;
+  cursor: pointer;
+}
+
+.pin-marker svg {
+  transform: rotate(45deg);
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  animation: marker-pulse 2s infinite ease-out;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes marker-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
 }
 
 /* Clases Premium de Botones */

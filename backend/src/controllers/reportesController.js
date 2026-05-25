@@ -2,6 +2,7 @@ const pool = require("../config/db");
 const { verificarAlertasCercanas } = require("./suscripcionController");
 
 const crearReporte = async (req, res) => {
+  console.log("[DEBUG Reporte] Body recibido:", req.body);
   const { tipo, descripcion, latitud, longitud } = req.body;
   let id_tipo = 1;
   if (tipo === "robo") id_tipo = 1;
@@ -9,12 +10,12 @@ const crearReporte = async (req, res) => {
   if (tipo === "alumbrado") id_tipo = 3;
   if (tipo === "sospechoso") id_tipo = 4;
 
-  // Límites geográficos para Los Mochis (CU 10)
+  // Límites geográficos para Los Mochis y ejidos aledaños (~25km radio)
   const LIMITES = {
-    latMin: 25.70,
-    latMax: 25.90,
-    lngMin: -109.10,
-    lngMax: -108.90
+    latMin: 25.50,
+    latMax: 26.10,
+    lngMin: -109.30,
+    lngMax: -108.70
   };
 
   if (
@@ -32,6 +33,17 @@ const crearReporte = async (req, res) => {
       [id_tipo, latitud, longitud, descripcion || null],
     );
     res.status(201).json({ mensaje: "Reporte guardado con éxito", id: resultado.insertId });
+
+    // Enviar alertas por correo a suscriptores cercanos inmediatamente (fire-and-forget)
+    verificarAlertasCercanas(latitud, longitud, resultado.insertId)
+      .then((enviadas) => {
+        if (enviadas > 0) {
+          console.log(`[ALERTA] Se enviaron ${enviadas} alertas por correo para el reporte #${resultado.insertId}`);
+        }
+      })
+      .catch((err) => {
+        console.error("[ALERTA] Error al verificar alertas cercanas tras crear reporte:", err);
+      });
   } catch (error) {
     res.status(500).json({ error: "Error al guardar el reporte" });
   }

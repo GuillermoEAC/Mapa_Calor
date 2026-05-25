@@ -44,9 +44,22 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
       maximumAge: 0
     };
 
+    // Límites geográficos de Los Mochis y ejidos aledaños (~25km radio) y centro por defecto
+    const LIMITES = { latMin: 25.50, latMax: 26.10, lngMin: -109.30, lngMax: -108.70 };
+    const centroLosMochis = { lat: 25.7904, lng: -108.9858 };
+
     navigator.geolocation.getCurrentPosition(
       async (posicion) => {
-        const { latitude, longitude } = posicion.coords;
+        let { latitude, longitude } = posicion.coords;
+
+        // Si el GPS está fuera de Los Mochis, usar el centro como fallback
+        if (
+          latitude < LIMITES.latMin || latitude > LIMITES.latMax ||
+          longitude < LIMITES.lngMin || longitude > LIMITES.lngMax
+        ) {
+          latitude = centroLosMochis.lat;
+          longitude = centroLosMochis.lng;
+        }
 
         if (!latitude || !longitude) {
           setError("No se pudieron obtener coordenadas geográficas válidas.");
@@ -87,16 +100,40 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
       },
       (err) => {
         console.error("Error de geolocalización:", err);
-        let msg = "No pudimos obtener tu ubicación.";
-        if (err.code === 1) {
-          msg = "Permiso denegado. Por favor, permite el acceso a la ubicación en la barra de direcciones de tu navegador para poder suscribirte a esta zona.";
-        } else if (err.code === 2) {
-          msg = "La ubicación no está disponible actualmente. Intenta de nuevo o verifica tu GPS/red.";
-        } else if (err.code === 3) {
-          msg = "Tiempo de espera agotado al obtener la ubicación. Intenta de nuevo.";
-        }
-        setError(msg);
-        setCargando(false);
+        // Fallback: usar centro de Los Mochis si no se puede obtener GPS
+        const usarFallback = async () => {
+          try {
+            const respuesta = await fetch("http://localhost:3000/api/suscripciones", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                correo_notificacion: correoLimpio,
+                latitud_zona: centroLosMochis.lat,
+                longitud_zona: centroLosMochis.lng,
+                radio_cobertura_metros: parseInt(radio),
+              }),
+            });
+
+            const data = await respuesta.json().catch(() => null);
+
+            if (respuesta.ok) {
+              setExito(true);
+              setCorreo("");
+              setRadio("500");
+              setTimeout(() => {
+                setExito(false);
+                onClose();
+              }, 3500);
+            } else {
+              setError(data?.error || "Error al registrar la suscripción.");
+            }
+          } catch (fetchErr) {
+            setError("No se pudo conectar con el servidor.");
+          } finally {
+            setCargando(false);
+          }
+        };
+        usarFallback();
       },
       opcionesGeo
     );
