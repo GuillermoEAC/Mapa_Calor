@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMapEvents, useMap } from "react-leaflet";
-import { Share2, ListFilter, X } from "lucide-react";
+import { Share2, ListFilter, X, Navigation } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -54,6 +54,15 @@ const MAX_BOUNDS = [
   [25.5, -109.3],
   [26.1, -108.7],
 ];
+
+const MapRefRegister = ({ setMap }) => {
+  const map = useMap();
+  useEffect(() => {
+    setMap(map);
+    return () => setMap(null);
+  }, [map, setMap]);
+  return null;
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Componente: Capa de Mapa de Calor (leaflet.heat) — Memoizado
@@ -216,6 +225,26 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   const [filtrosActivos, setFiltrosActivos] = useState(new Set(["1", "2", "3", "4"]));
   const [mostrarFiltros, setMostrarFiltros] = useState(true);
   const [estiloMapaActivo, setEstiloMapaActivo] = useState("google_hibrido");
+
+  const mapRef = useRef(null);
+
+  const obtenerMiUbicacion = useCallback(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (posicion) => {
+          const { latitude, longitude } = posicion.coords;
+          if (mapRef.current) {
+            mapRef.current.flyTo([latitude, longitude], 15, { duration: 1.5 });
+          }
+        },
+        (error) => {
+          alert("No se pudo obtener tu ubicación actual. Asegúrate de activar los permisos de GPS de tu navegador.");
+        }
+      );
+    } else {
+      alert("Tu navegador no admite geolocalización.");
+    }
+  }, []);
   const [configMapa, setConfigMapa] = useState({ radio_puntos: 500 });
   const [mapCenter, setMapCenter] = useState(
     compartirParams ? [compartirParams.lat, compartirParams.lng] : CENTRO_LOS_MOCHIS
@@ -508,6 +537,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         style={{ height: "100%", width: "100%" }}
         preferCanvas={true}
       >
+        <MapRefRegister setMap={(map) => { mapRef.current = map; }} />
         <TileLayer
           key={estiloMapaActivo}
           url={ESTILOS_MAPA[estiloMapaActivo].url}
@@ -537,6 +567,23 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
           </Marker>
         )}
       </MapContainer>
+
+      {/* ── Botón flotante: Mi Ubicación ── */}
+      <button
+        onClick={obtenerMiUbicacion}
+        className="btn-premium btn-purple"
+        style={{
+          position: "absolute",
+          bottom: "85px",
+          left: "20px",
+          zIndex: 1000,
+          padding: "12px 22px",
+          fontSize: "14px",
+        }}
+      >
+        <Navigation size={16} />
+        Mi Ubicación
+      </button>
 
       {/* ── Botón flotante: Compartir Vista ── */}
       <button
