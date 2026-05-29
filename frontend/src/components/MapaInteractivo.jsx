@@ -226,6 +226,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   const [mostrarFiltros, setMostrarFiltros] = useState(true);
   const [estiloMapaActivo, setEstiloMapaActivo] = useState("google_hibrido");
 
+  const [miUbicacionActual, setMiUbicacionActual] = useState(null);
   const mapRef = useRef(null);
 
   const obtenerMiUbicacion = useCallback(() => {
@@ -233,6 +234,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
       navigator.geolocation.getCurrentPosition(
         (posicion) => {
           const { latitude, longitude } = posicion.coords;
+          setMiUbicacionActual([latitude, longitude]);
           if (mapRef.current) {
             mapRef.current.flyTo([latitude, longitude], 17, { duration: 1.5 });
           }
@@ -565,6 +567,34 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
               Estás aquí. <br /> Tu reporte anónimo se registrará en esta zona.
             </Popup>
           </Marker>
+        )}
+
+        {/* Punto azul indicador estilo Google Maps */}
+        {miUbicacionActual && (
+          <>
+            <CircleMarker
+              center={miUbicacionActual}
+              radius={16}
+              pathOptions={{
+                fillColor: "#3b82f6",
+                fillOpacity: 0.15,
+                color: "transparent",
+                interactive: false,
+              }}
+            />
+            <CircleMarker
+              center={miUbicacionActual}
+              radius={7}
+              pathOptions={{
+                fillColor: "#3b82f6",
+                fillOpacity: 1,
+                color: "#ffffff",
+                weight: 2,
+                opacity: 1,
+                interactive: false,
+              }}
+            />
+          </>
         )}
       </MapContainer>
 
