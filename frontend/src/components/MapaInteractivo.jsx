@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMapEvents, useMap } from "react-leaflet";
-import { Share2, ListFilter, X, Navigation } from "lucide-react";
+import { Share2, ListFilter, X, User } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -234,7 +234,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         (posicion) => {
           const { latitude, longitude } = posicion.coords;
           if (mapRef.current) {
-            mapRef.current.flyTo([latitude, longitude], 15, { duration: 1.5 });
+            mapRef.current.flyTo([latitude, longitude], 17, { duration: 1.5 });
           }
         },
         (error) => {
@@ -581,7 +581,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
           fontSize: "14px",
         }}
       >
-        <Navigation size={16} />
+        <User size={16} />
         Mi Ubicación
       </button>
 
