@@ -40,7 +40,9 @@ CREATE TABLE Suscripcion_Alerta (
     correo_notificacion VARCHAR(100) NOT NULL,
     latitud_zona DECIMAL(10,8) NOT NULL,
     longitud_zona DECIMAL(11,8) NOT NULL,
-    radio_cobertura_metros INT DEFAULT 500
+    radio_cobertura_metros INT DEFAULT 500,
+    verificado BOOLEAN DEFAULT FALSE,
+    token_verificacion VARCHAR(64) UNIQUE
 );
 
 -- 7. Insertamos los datos de prueba

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bell, Mail, X, Navigation, AlertCircle, CheckCircle, ShieldAlert } from "lucide-react";
+import { Bell, Mail, X, Navigation, AlertCircle, ShieldAlert } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -231,23 +231,35 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
               width: "70px",
               height: "70px",
               borderRadius: "50%",
-              backgroundColor: "rgba(16, 185, 129, 0.15)",
-              border: "2px solid #10b981",
+              backgroundColor: "rgba(124, 58, 237, 0.15)",
+              border: "2px solid #7c3aed",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               marginBottom: "20px",
-              color: "#10b981",
-              boxShadow: "0 0 20px rgba(16, 185, 129, 0.3)"
+              color: "#a78bfa",
+              boxShadow: "0 0 20px rgba(124, 58, 237, 0.3)"
             }}>
-              <CheckCircle size={40} />
+              <Mail size={40} />
             </div>
             <h3 style={{ color: "#f8fafc", margin: "0 0 10px 0", fontSize: "18px", fontWeight: "700" }}>
-              ¡Suscripción Activada!
+              ¡Revisa tu correo!
             </h3>
-            <p style={{ color: "#94a3b8", fontSize: "14px", margin: 0, lineHeight: "1.6", maxWidth: "340px" }}>
-              Hemos configurado con éxito la zona de monitoreo en tu geolocalización actual. Recibirás avisos instantáneos en tu correo cuando un incidente sea aprobado en tu área.
+            <p style={{ color: "#94a3b8", fontSize: "14px", margin: "0 0 12px 0", lineHeight: "1.6", maxWidth: "340px" }}>
+              Te hemos enviado un <strong style={{ color: "#a78bfa" }}>correo de verificación</strong>. Haz clic en el enlace que encontrarás en tu bandeja de entrada para activar tu suscripción.
             </p>
+            <div style={{
+              backgroundColor: "rgba(250, 204, 21, 0.08)",
+              border: "1px solid rgba(250, 204, 21, 0.2)",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              fontSize: "12px",
+              color: "#fde68a",
+              lineHeight: "1.5",
+              maxWidth: "340px"
+            }}>
+              <strong>Consejo:</strong> Si no lo ves en tu bandeja de entrada, revisa la carpeta de <strong>Spam</strong> o <strong>Correo no deseado</strong>.
+            </div>
           </div>
         ) : (
           <>
