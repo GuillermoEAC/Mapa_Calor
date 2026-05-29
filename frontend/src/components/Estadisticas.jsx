@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { API_BASE_URL } from "../config";
 import { BarChart3, PieChart as PieChartIcon, TrendingUp } from "lucide-react";
 
 const COLORS = ["#EF4444", "#F97316", "#EAB308", "#8B5CF6", "#64748B"];
@@ -11,7 +12,7 @@ const Estadisticas = () => {
   useEffect(() => {
     const cargarEstadisticas = async () => {
       try {
-        const respuesta = await fetch("http://localhost:3000/api/reportes/estadisticas");
+        const respuesta = await fetch(`${API_BASE_URL}/api/reportes/estadisticas`);
         const resultado = await respuesta.json();
         setDatos(resultado);
       } catch (error) {

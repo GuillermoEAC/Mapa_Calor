@@ -10,6 +10,7 @@ import HistoricoReportes from "./components/HistoricoReportes";
 import SuscripcionAlerta from "./components/SuscripcionAlerta";
 import ExportarReportes from "./components/ExportarReportes";
 import { Shield, AlertTriangle, ArrowLeft, BarChart3, Settings, PhoneCall, ListFilter, History, Bell, Download } from "lucide-react";
+import { API_BASE_URL } from "./config";
 
 function App() {
   const [ubicacionUsuario, setUbicacionUsuario] = useState(null);
@@ -87,7 +88,7 @@ function App() {
 
   const manejarEnvioReporte = async (datos) => {
     try {
-      const respuesta = await fetch("http://localhost:3000/api/reportes", {
+      const respuesta = await fetch(`${API_BASE_URL}/api/reportes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datos),
@@ -188,21 +189,10 @@ function App() {
   }
 
   return (
-    <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "#0b0f19" }}>
-      <header className="glass-header" style={{ padding: "18px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 1000, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)", position: "relative" }}>
-        {/* Glow sutil en el header */}
-        <div style={{
-          position: "absolute",
-          top: 0,
-          left: "10%",
-          width: "300px",
-          height: "2px",
-          background: "linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent)",
-          pointerEvents: "none"
-        }} />
-
+    <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "#0f172a" }}>
+      <header className="glass-header" style={{ padding: "18px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 1000, position: "relative" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
-          {/* Logo Premium */}
+          {/* Logo Premium Simplificado */}
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             <div style={{
               display: "flex",
@@ -210,9 +200,8 @@ function App() {
               justifyContent: "center",
               width: "44px",
               height: "44px",
-              borderRadius: "14px",
-              background: "linear-gradient(135deg, #ef4444 0%, #8b5cf6 100%)",
-              boxShadow: "0 0 25px rgba(139, 92, 246, 0.35)",
+              borderRadius: "10px",
+              background: "#ef4444",
               color: "white"
             }}>
               <Shield size={22} />
@@ -221,16 +210,14 @@ function App() {
               <h1 style={{ 
                 margin: 0, 
                 fontSize: "24px", 
-                fontWeight: 900, 
-                letterSpacing: "-0.75px",
-                background: "linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                fontWeight: 800, 
+                letterSpacing: "-0.5px",
+                color: "#ffffff",
                 lineHeight: "1.1"
               }}>
                 Mapa de Inseguridad
               </h1>
-              <span style={{ fontSize: "10px", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.8px", marginTop: "3px" }}>
+              <span style={{ fontSize: "10px", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.5px", marginTop: "3px" }}>
                 Monitoreo Colaborativo
               </span>
             </div>
@@ -258,7 +245,7 @@ function App() {
           </button>
           <button 
             onClick={manejarClickReportar} 
-            className="btn-premium btn-danger pulse-glow"
+            className="btn-premium btn-danger"
             title="Reportar Incidente"
             style={{ width: "42px", height: "42px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
           >

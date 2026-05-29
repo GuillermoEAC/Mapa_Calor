@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMapEvents, useMap } from "react-leaflet";
-import { Share2 } from "lucide-react";
+import { Share2, ListFilter, X } from "lucide-react";
+import { API_BASE_URL } from "../config";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
@@ -143,8 +144,7 @@ const crearIconoPersonalizado = (color, tipo) => {
 
   const html = `
     <div class="custom-marker-wrapper">
-      <div class="pulse-ring" style="background-color: ${color};"></div>
-      <div class="pin-marker" style="background-color: ${color}; box-shadow: 0 0 12px ${color};">
+      <div class="pin-marker" style="background-color: ${color};">
         <svg viewBox="0 0 24 24" width="12" height="12" style="display: block; color: #ffffff;">
           ${svgIcon}
         </svg>
@@ -178,7 +178,7 @@ const IncidenteMarker = memo(({ punto }) => {
       <Popup>
         <div style={{ minWidth: "180px", fontFamily: "Outfit, sans-serif", padding: "4px" }}>
           <h4 style={{ margin: "0 0 5px 0", color: infoTipo.color, fontWeight: "700", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: infoTipo.color, boxShadow: `0 0 6px ${infoTipo.color}` }}></span>
+            <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: infoTipo.color }}></span>
             {infoTipo.nombre}
           </h4>
           <p style={{ margin: "0 0 10px 0", fontSize: "11px", color: "#64748b", fontWeight: "500" }}>
@@ -214,6 +214,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   const [puntosRaw, setPuntosRaw] = useState([]);
   // Filtros: Set con IDs de tipo activos. Inicia con todos activos.
   const [filtrosActivos, setFiltrosActivos] = useState(new Set(["1", "2", "3", "4"]));
+  const [mostrarFiltros, setMostrarFiltros] = useState(true);
   const [estiloMapaActivo, setEstiloMapaActivo] = useState("google_hibrido");
   const [configMapa, setConfigMapa] = useState({ radio_puntos: 500 });
   const [mapCenter, setMapCenter] = useState(
@@ -266,8 +267,8 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     const cargarDatos = async () => {
       try {
         const [resPuntos, resConfig] = await Promise.all([
-          fetch("http://localhost:3000/api/reportes/aprobados"),
-          fetch("http://localhost:3000/api/config"),
+          fetch(`${API_BASE_URL}/api/reportes/aprobados`),
+          fetch(`${API_BASE_URL}/api/config`),
         ]);
         if (cancelado) return;
 
@@ -319,36 +320,80 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
 
   return (
     <div style={{ position: "relative", height: "100%", width: "100%" }}>
-      {/* ── Panel flotante de Filtros ── */}
-      <div
-        className="glass-card animate-fade-in"
-        style={{
-          position: "absolute",
-          top: "20px",
-          right: "20px",
-          zIndex: 1000,
-          padding: "20px",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          minWidth: "240px",
-          background: "rgba(15, 23, 42, 0.85)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-        }}
-      >
-        <h3
+      {/* Botón flotante para mostrar filtros si están ocultos */}
+      {!mostrarFiltros && (
+        <button
+          onClick={() => setMostrarFiltros(true)}
+          className="btn-premium btn-secondary"
           style={{
-            margin: "0 0 4px 0",
-            fontSize: "14px",
-            fontWeight: "800",
-            color: "#f8fafc",
-            letterSpacing: "1px",
-            textTransform: "uppercase",
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            zIndex: 1000,
+            padding: "10px 14px",
+            fontSize: "13.5px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
           }}
         >
+          <ListFilter size={16} />
           Filtrar Mapa
-        </h3>
+        </button>
+      )}
+
+      {/* ── Panel flotante de Filtros ── */}
+      {mostrarFiltros && (
+        <div
+          className="glass-card animate-fade-in"
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            zIndex: 1000,
+            padding: "20px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            minWidth: "240px",
+            background: "#1e293b",
+            border: "1px solid #334155",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: "14px",
+                fontWeight: "800",
+                color: "#f8fafc",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+              }}
+            >
+              Filtrar Mapa
+            </h3>
+            <button
+              onClick={() => setMostrarFiltros(false)}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "#94a3b8",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              title="Ocultar filtros"
+              onMouseEnter={(e) => e.currentTarget.style.color = "#f8fafc"}
+              onMouseLeave={(e) => e.currentTarget.style.color = "#94a3b8"}
+            >
+              <X size={16} />
+            </button>
+          </div>
 
         {/* Checkbox: Todos */}
         <label
@@ -404,7 +449,6 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                   height: "10px",
                   borderRadius: "50%",
                   backgroundColor: info.color,
-                  boxShadow: activo ? `0 0 8px ${info.color}` : "none",
                   opacity: activo ? 1 : 0.4,
                 }}
               />
@@ -452,6 +496,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
           ))}
         </select>
       </div>
+      )}
 
       {/* ── Mapa ── */}
       <MapContainer
@@ -504,7 +549,6 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
           zIndex: 1000,
           padding: "12px 22px",
           fontSize: "14px",
-          boxShadow: "0 10px 25px rgba(59, 130, 246, 0.35)",
         }}
       >
         <Share2 size={16} />

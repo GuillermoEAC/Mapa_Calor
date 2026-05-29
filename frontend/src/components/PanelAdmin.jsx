@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Shield, CheckCircle, XCircle } from "lucide-react";
+import { API_BASE_URL } from "../config";
 
 const PanelAdmin = () => {
   const [reportes, setReportes] = useState([]);
@@ -7,7 +8,7 @@ const PanelAdmin = () => {
   const cargarReportes = async () => {
     try {
       const respuesta = await fetch(
-        "http://localhost:3000/api/reportes/pendientes",
+        `${API_BASE_URL}/api/reportes/pendientes`,
       );
       const datos = await respuesta.json();
       setReportes(datos);
@@ -22,7 +23,7 @@ const PanelAdmin = () => {
 
   const cambiarEstado = async (id, estado) => {
     try {
-      await fetch(`http://localhost:3000/api/reportes/${id}/estado`, {
+      await fetch(`${API_BASE_URL}/api/reportes/${id}/estado`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nuevo_estado: estado }),

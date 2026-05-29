@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Lock } from "lucide-react";
+import { API_BASE_URL } from "../config";
 
 const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
   const [usuario, setUsuario] = useState("");
@@ -11,7 +12,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
     setError("");
 
     try {
-      const respuesta = await fetch("http://localhost:3000/api/login", {
+      const respuesta = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario, password }),

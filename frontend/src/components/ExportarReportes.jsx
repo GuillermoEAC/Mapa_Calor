@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Download, Filter, CheckCircle } from "lucide-react";
+import { API_BASE_URL } from "../config";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CU-7: Exportar Reportes (CSV)
@@ -20,7 +21,7 @@ const ExportarReportes = () => {
     if (hasta) params.append("hasta", hasta);
 
     const queryString = params.toString();
-    const url = `http://localhost:3000/api/reportes/exportar${queryString ? "?" + queryString : ""}`;
+    const url = `${API_BASE_URL}/api/reportes/exportar${queryString ? "?" + queryString : ""}`;
 
     // Abrir la URL para iniciar la descarga del CSV
     window.open(url, "_blank");

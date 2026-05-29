@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Settings, Save, RefreshCw } from "lucide-react";
+import { API_BASE_URL } from "../config";
 
 const ConfiguracionMapa = () => {
   const [config, setConfig] = useState({
@@ -12,7 +13,7 @@ const ConfiguracionMapa = () => {
   useEffect(() => {
     const cargarConfig = async () => {
       try {
-        const respuesta = await fetch("http://localhost:3000/api/config");
+        const respuesta = await fetch(`${API_BASE_URL}/api/config`);
         const datos = await respuesta.json();
         setConfig({
           radio: datos.radio_puntos,
@@ -29,7 +30,7 @@ const ConfiguracionMapa = () => {
   const manejarGuardar = async () => {
     setGuardando(true);
     try {
-      await fetch("http://localhost:3000/api/config", {
+      await fetch(`${API_BASE_URL}/api/config`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config)

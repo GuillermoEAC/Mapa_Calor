@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Bell, Mail, X, Navigation, AlertCircle, CheckCircle, ShieldAlert } from "lucide-react";
+import { API_BASE_URL } from "../config";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CU-14: Suscripción a Alertas de Zona con UI Glassmorphic Premium y Robusta
@@ -68,7 +69,7 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
         }
 
         try {
-          const respuesta = await fetch("http://localhost:3000/api/suscripciones", {
+          const respuesta = await fetch(`${API_BASE_URL}/api/suscripciones`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -103,7 +104,7 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
         // Fallback: usar centro de Los Mochis si no se puede obtener GPS
         const usarFallback = async () => {
           try {
-            const respuesta = await fetch("http://localhost:3000/api/suscripciones", {
+            const respuesta = await fetch(`${API_BASE_URL}/api/suscripciones`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -166,23 +167,10 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
           maxWidth: "480px",
           padding: "30px",
           position: "relative",
-          background: "linear-gradient(135deg, rgba(23, 37, 84, 0.4) 0%, rgba(15, 23, 42, 0.9) 100%)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(139, 92, 246, 0.1)"
+          background: "#1e293b",
+          border: "1px solid #334155",
         }}
       >
-        {/* Glow decorativo de fondo */}
-        <div style={{
-          position: "absolute",
-          top: "-50px",
-          right: "-50px",
-          width: "150px",
-          height: "150px",
-          background: "radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%)",
-          zIndex: -1,
-          pointerEvents: "none"
-        }} />
-
         {/* Encabezado */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
           <h2 style={{ 
@@ -201,9 +189,8 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
               justifyContent: "center",
               width: "40px",
               height: "40px",
-              borderRadius: "12px",
-              background: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
-              boxShadow: "0 4px 15px rgba(124, 58, 237, 0.35)",
+              borderRadius: "8px",
+              background: "#7c3aed",
               color: "white"
             }}>
               <Bell size={20} />

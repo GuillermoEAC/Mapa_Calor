@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Phone, ShieldAlert, X } from "lucide-react";
+import { API_BASE_URL } from "../config";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CU-12: Directorio de Emergencia con UI Glassmorphic Premium
@@ -9,7 +10,7 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
-      fetch("http://localhost:3000/api/emergencias")
+      fetch(`${API_BASE_URL}/api/emergencias`)
         .then(res => res.json())
         .then(data => setContactos(data))
         .catch(err => console.error("Error al cargar directorio:", err));
@@ -38,23 +39,10 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
           maxWidth: "460px",
           padding: "30px",
           position: "relative",
-          background: "linear-gradient(135deg, rgba(30, 20, 20, 0.45) 0%, rgba(15, 23, 42, 0.95) 100%)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(239, 68, 68, 0.08)"
+          background: "#1e293b",
+          border: "1px solid #334155",
         }}
       >
-        {/* Glow decorativo de fondo */}
-        <div style={{
-          position: "absolute",
-          top: "-50px",
-          right: "-50px",
-          width: "150px",
-          height: "150px",
-          background: "radial-gradient(circle, rgba(239, 68, 68, 0.2) 0%, transparent 70%)",
-          zIndex: -1,
-          pointerEvents: "none"
-        }} />
-
         {/* Encabezado */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
           <h2 style={{ 
@@ -73,9 +61,8 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
               justifyContent: "center",
               width: "40px",
               height: "40px",
-              borderRadius: "12px",
-              background: "linear-gradient(135deg, #f87171 0%, #dc2626 100%)",
-              boxShadow: "0 4px 15px rgba(220, 38, 38, 0.35)",
+              borderRadius: "8px",
+              background: "#ef4444",
               color: "white"
             }}>
               <ShieldAlert size={20} />
@@ -139,15 +126,14 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
                 <div style={{ color: "#3b82f6", fontWeight: "800", fontSize: "20px", marginTop: "4px", letterSpacing: "0.5px" }}>{contacto.numero}</div>
               </div>
               <div style={{ 
-                background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)", 
+                background: "#3b82f6", 
                 width: "42px",
                 height: "42px",
-                borderRadius: "12px", 
+                borderRadius: "8px", 
                 color: "white",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(29, 78, 216, 0.3)"
+                justifyContent: "center"
               }}>
                 <Phone size={18} fill="white" />
               </div>
