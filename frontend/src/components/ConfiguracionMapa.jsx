@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Settings, Save, RefreshCw } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
-const ConfiguracionMapa = () => {
+const ConfiguracionMapa = ({ token }) => {
   const [config, setConfig] = useState({
     radio: 500,
     desenfoque: 15,
@@ -32,7 +32,7 @@ const ConfiguracionMapa = () => {
     try {
       await fetch(`${API_BASE_URL}/api/config`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(config)
       });
       alert("Configuración guardada. El mapa se actualizará para todos los usuarios.");

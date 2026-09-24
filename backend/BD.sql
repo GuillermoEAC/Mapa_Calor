@@ -45,9 +45,31 @@ CREATE TABLE Suscripcion_Alerta (
     token_verificacion VARCHAR(64) UNIQUE
 );
 
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- ÍNDICES DE RENDIMIENTO (Optimización para TiDB)
+-- Sin estos índices, todas las queries hacen FULL TABLE SCAN
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- Índices para la tabla Reporte (la más consultada)
+CREATE INDEX idx_reporte_estado ON Reporte(estado);
+CREATE INDEX idx_reporte_tipo ON Reporte(id_tipo);
+CREATE INDEX idx_reporte_fecha ON Reporte(fecha_registro);
+CREATE INDEX idx_reporte_estado_fecha ON Reporte(estado, fecha_registro);
+
+-- Índices para la tabla Suscripcion_Alerta
+CREATE INDEX idx_suscripcion_verificado ON Suscripcion_Alerta(verificado);
+CREATE INDEX idx_suscripcion_token ON Suscripcion_Alerta(token_verificacion);
+CREATE INDEX idx_suscripcion_correo ON Suscripcion_Alerta(correo_notificacion);
+CREATE INDEX idx_suscripcion_coords ON Suscripcion_Alerta(latitud_zona, longitud_zona);
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+
 -- 7. Insertamos los datos de prueba
+-- NOTA: Las contraseñas ahora son hashes bcrypt del valor '123456'
+-- Generado con: bcrypt.hashSync('123456', 12)
 INSERT INTO Administrador (correo, contrasena) 
-VALUES ('admin@tuproyecto.com', '123456'), ('admin', '123456');
+VALUES ('admin@tuproyecto.com', '$2b$12$zep40ZvYYUkwBcSI.06GJeWlwpb4lOea5R9/mcd8RarodeLgJ0hlO'),
+       ('admin', '$2b$12$zep40ZvYYUkwBcSI.06GJeWlwpb4lOea5R9/mcd8RarodeLgJ0hlO');
 
 INSERT INTO Tipo_Incidente (nombre, color_mapa, intensidad_huella) VALUES 
 ('Robo / Asalto', 'red', 3),
@@ -82,3 +104,10 @@ INSERT INTO Directorio_Emergencia (institucion, numero, prioridad) VALUES
 ('Policía Municipal', '060', 2),
 ('Cruz Roja', '065', 3),
 ('Bomberos', '068', 4);
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- 10. Tareas Automáticas de Depuración
+-- NOTA: TiDB Cloud no soporta 'CREATE EVENT' ni 'event_scheduler' de MySQL.
+-- La depuración diaria se ejecuta mediante el endpoint del backend:
+-- POST/GET /api/reportes/depurar (automatizado con cron-job.org o similar)
+-- ═══════════════════════════════════════════════════════════════════════════════

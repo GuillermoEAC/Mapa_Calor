@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { History, Search, Calendar } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
-const HistoricoReportes = () => {
+const HistoricoReportes = ({ token }) => {
   const [reportes, setReportes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const cargarHistorico = async () => {
     try {
-      const respuesta = await fetch(`${API_BASE_URL}/api/reportes/historico`);
+      const respuesta = await fetch(`${API_BASE_URL}/api/reportes/historico`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const datos = await respuesta.json();
       setReportes(datos);
     } catch (error) {

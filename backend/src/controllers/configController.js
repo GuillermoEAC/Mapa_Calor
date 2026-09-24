@@ -4,6 +4,7 @@ const pool = require("../config/db");
 const obtenerConfiguracion = async (req, res) => {
   try {
     const [filas] = await pool.query("SELECT * FROM Configuracion_Mapa WHERE id_config = 1");
+    res.set("Cache-Control", "public, max-age=300"); // 5 min cache
     res.json(filas[0]);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener configuración" });

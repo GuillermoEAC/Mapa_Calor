@@ -14,8 +14,13 @@ const calcularDistancia = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
-// Configuración dinámica del transportador SMTP (SMTP real con fallback a cuenta de pruebas Ethereal)
+// Configuración dinámica del transportador SMTP con CACHÉ (SMTP real con fallback a cuenta de pruebas Ethereal)
+// El transportador se crea UNA vez y se reutiliza en todos los envíos
+let _transportadorCache = null;
+
 const obtenerTransportador = async () => {
+  if (_transportadorCache) return _transportadorCache;
+
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT) || 587;
   const user = process.env.SMTP_USER;
@@ -23,18 +28,21 @@ const obtenerTransportador = async () => {
   const secure = process.env.SMTP_SECURE === "true";
 
   if (user && pass) {
-    return nodemailer.createTransport({
+    _transportadorCache = nodemailer.createTransport({
       host: host || "smtp.gmail.com",
       port: port,
       secure: secure,
-      auth: { user, pass }
+      auth: { user, pass },
+      pool: true,        // Reutilizar conexiones SMTP
+      maxConnections: 3,  // Máximo 3 conexiones simultáneas
     });
+    return _transportadorCache;
   }
 
   // Fallback a Ethereal Email para pruebas locales seguras y fluidas
   try {
     const cuentaPruebas = await nodemailer.createTestAccount();
-    return nodemailer.createTransport({
+    _transportadorCache = nodemailer.createTransport({
       host: cuentaPruebas.smtp.host,
       port: cuentaPruebas.smtp.port,
       secure: cuentaPruebas.smtp.secure,
@@ -43,6 +51,7 @@ const obtenerTransportador = async () => {
         pass: cuentaPruebas.pass
       }
     });
+    return _transportadorCache;
   } catch (error) {
     console.error("[SMTP] Error al configurar el transportador de pruebas:", error);
     return null;
@@ -374,9 +383,14 @@ const eliminarSuscripcion = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const verificarAlertasCercanas = async (latReporte, lngReporte, idReporte) => {
   try {
-    // Solo obtener suscripciones VERIFICADAS
+    // Solo obtener suscripciones VERIFICADAS dentro de un bounding box aproximado
+    // (~0.03 grados ≈ 3.3km, suficiente para cubrir el radio máximo de 2km con margen)
     const [suscripciones] = await pool.query(
-      "SELECT * FROM Suscripcion_Alerta WHERE verificado = TRUE"
+      `SELECT * FROM Suscripcion_Alerta 
+       WHERE verificado = TRUE
+         AND latitud_zona BETWEEN ? - 0.03 AND ? + 0.03
+         AND longitud_zona BETWEEN ? - 0.03 AND ? + 0.03`,
+      [latReporte, latReporte, lngReporte, lngReporte]
     );
     if (suscripciones.length === 0) return 0;
 

@@ -20,10 +20,10 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
 
       const datos = await respuesta.json();
 
-      if (datos.success) {
-        onLoginSuccess(); // Le avisamos a App.jsx que la contraseña es correcta
+      if (datos.success && datos.token) {
+        onLoginSuccess(datos.token); // Enviamos el token JWT a App.jsx
       } else {
-        setError(datos.error); // Mostramos el error en pantalla
+        setError(datos.error || "Error al iniciar sesión");
       }
     } catch (err) {
       setError("Error de conexión con el servidor");

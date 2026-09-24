@@ -5,14 +5,14 @@ import { API_BASE_URL } from "../config";
 // ─────────────────────────────────────────────────────────────────────────────
 // CU-7: Exportar Reportes (CSV)
 // ─────────────────────────────────────────────────────────────────────────────
-const ExportarReportes = () => {
+const ExportarReportes = ({ token }) => {
   const [estado, setEstado] = useState("todos");
   const [tipo, setTipo] = useState("todos");
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
   const [mensajeExito, setMensajeExito] = useState(false);
 
-  const manejarDescarga = () => {
+  const manejarDescarga = async () => {
     const params = new URLSearchParams();
 
     if (estado !== "todos") params.append("estado", estado);
@@ -23,12 +23,29 @@ const ExportarReportes = () => {
     const queryString = params.toString();
     const url = `${API_BASE_URL}/api/reportes/exportar${queryString ? "?" + queryString : ""}`;
 
-    // Abrir la URL para iniciar la descarga del CSV
-    window.open(url, "_blank");
+    try {
+      const respuesta = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-    // Mostrar mensaje de éxito
-    setMensajeExito(true);
-    setTimeout(() => setMensajeExito(false), 3000);
+      if (!respuesta.ok) throw new Error("Error al exportar");
+
+      const blob = await respuesta.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = "reportes_export.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+
+      // Mostrar mensaje de éxito
+      setMensajeExito(true);
+      setTimeout(() => setMensajeExito(false), 3000);
+    } catch (error) {
+      alert("Error al descargar los reportes. Verifica tu sesión.");
+    }
   };
 
   return (

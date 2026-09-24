@@ -5,14 +5,16 @@ import { BarChart3, PieChart as PieChartIcon, TrendingUp } from "lucide-react";
 
 const COLORS = ["#EF4444", "#F97316", "#EAB308", "#8B5CF6", "#64748B"];
 
-const Estadisticas = () => {
+const Estadisticas = ({ token }) => {
   const [datos, setDatos] = useState({ porTipo: [], porHora: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const cargarEstadisticas = async () => {
       try {
-        const respuesta = await fetch(`${API_BASE_URL}/api/reportes/estadisticas`);
+        const respuesta = await fetch(`${API_BASE_URL}/api/reportes/estadisticas`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         const resultado = await respuesta.json();
         setDatos(resultado);
       } catch (error) {

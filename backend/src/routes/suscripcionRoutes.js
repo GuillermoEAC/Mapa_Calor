@@ -5,12 +5,17 @@ const {
   eliminarSuscripcion,
   verificarCorreo,
 } = require("../controllers/suscripcionController");
+const verificarToken = require("../middleware/auth");
+const { limiteSuscripciones } = require("../middleware/rateLimiter");
 
 const router = express.Router();
 
-router.post("/", crearSuscripcion);
-router.get("/", obtenerSuscripciones);
+// Público: crear suscripción y verificar correo
+router.post("/", limiteSuscripciones, crearSuscripcion);
 router.get("/verificar/:token", verificarCorreo);
-router.delete("/:id", eliminarSuscripcion);
+
+// Protegido: listar y eliminar suscripciones (solo admin)
+router.get("/", verificarToken, obtenerSuscripciones);
+router.delete("/:id", verificarToken, eliminarSuscripcion);
 
 module.exports = router;

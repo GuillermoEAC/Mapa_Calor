@@ -1,16 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import MapaInteractivo from "./components/MapaInteractivo";
 import ModalReporte from "./components/ModalReporte";
-import PanelAdmin from "./components/PanelAdmin";
 import LoginAdmin from "./components/LoginAdmin";
-import Estadisticas from "./components/Estadisticas";
-import ConfiguracionMapa from "./components/ConfiguracionMapa";
 import DirectorioEmergencia from "./components/DirectorioEmergencia";
-import HistoricoReportes from "./components/HistoricoReportes";
-import SuscripcionAlerta from "./components/SuscripcionAlerta";
-import ExportarReportes from "./components/ExportarReportes";
 import { Shield, AlertTriangle, ArrowLeft, BarChart3, Settings, PhoneCall, ListFilter, History, Bell, Download } from "lucide-react";
 import { API_BASE_URL } from "./config";
+
+// ── Lazy loading: componentes del admin solo se cargan si el usuario accede a /admin ──
+const PanelAdmin = React.lazy(() => import("./components/PanelAdmin"));
+const Estadisticas = React.lazy(() => import("./components/Estadisticas"));
+const ConfiguracionMapa = React.lazy(() => import("./components/ConfiguracionMapa"));
+const HistoricoReportes = React.lazy(() => import("./components/HistoricoReportes"));
+const ExportarReportes = React.lazy(() => import("./components/ExportarReportes"));
+const SuscripcionAlerta = React.lazy(() => import("./components/SuscripcionAlerta"));
+
+// ── Spinner de carga para Suspense ──
+const LoadingSpinner = () => (
+  <div style={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+    color: "#94a3b8",
+    fontSize: "14px",
+    gap: "10px",
+  }}>
+    <div style={{
+      width: "20px",
+      height: "20px",
+      border: "2px solid #334155",
+      borderTop: "2px solid #3b82f6",
+      borderRadius: "50%",
+      animation: "spin 0.8s linear infinite",
+    }} />
+    Cargando...
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
 
 function App() {
   const [ubicacionUsuario, setUbicacionUsuario] = useState(null);
@@ -22,6 +48,7 @@ function App() {
   ); // mapa, admin
   const [seccionAdmin, setSeccionAdmin] = useState("moderacion"); // moderacion, estadisticas, config, historico, exportar
   const [adminAutenticado, setAdminAutenticado] = useState(false);
+  const [tokenJWT, setTokenJWT] = useState(null);
 
   // Acceso rápido de administrador mediante combinación de teclas (Ctrl + Alt + A)
   React.useEffect(() => {
@@ -108,11 +135,25 @@ function App() {
     }
   };
 
+  // ── Callback de login exitoso: guarda el token JWT ──
+  const manejarLoginExitoso = (token) => {
+    setTokenJWT(token);
+    setAdminAutenticado(true);
+  };
+
+  // ── Cerrar sesión: limpiar token ──
+  const cerrarSesion = () => {
+    setTokenJWT(null);
+    setAdminAutenticado(false);
+    window.history.pushState({}, '', '/');
+    setVistaActual("mapa");
+  };
+
   if (vistaActual === "admin") {
     if (!adminAutenticado) {
       return (
         <LoginAdmin
-          onLoginSuccess={() => setAdminAutenticado(true)}
+          onLoginSuccess={manejarLoginExitoso}
           onCancelar={() => { window.history.pushState({}, '', '/'); setVistaActual("mapa"); }}
         />
       );
@@ -168,7 +209,7 @@ function App() {
             </nav>
           </div>
           <button 
-            onClick={() => { setAdminAutenticado(false); window.history.pushState({}, '', '/'); setVistaActual("mapa"); }} 
+            onClick={cerrarSesion} 
             className="btn-premium btn-danger"
             style={{ padding: "10px 18px", fontSize: "14px" }}
           >
@@ -177,11 +218,13 @@ function App() {
         </header>
         <main style={{ flex: 1, overflowY: "auto", padding: "20px", backgroundColor: "#0f172a" }}>
           <div className="animate-fade-in" style={{ height: "100%" }}>
-            {seccionAdmin === "moderacion" && <PanelAdmin />}
-            {seccionAdmin === "estadisticas" && <Estadisticas />}
-            {seccionAdmin === "config" && <ConfiguracionMapa />}
-            {seccionAdmin === "historico" && <HistoricoReportes />}
-            {seccionAdmin === "exportar" && <ExportarReportes />}
+            <Suspense fallback={<LoadingSpinner />}>
+              {seccionAdmin === "moderacion" && <PanelAdmin token={tokenJWT} />}
+              {seccionAdmin === "estadisticas" && <Estadisticas token={tokenJWT} />}
+              {seccionAdmin === "config" && <ConfiguracionMapa token={tokenJWT} />}
+              {seccionAdmin === "historico" && <HistoricoReportes token={tokenJWT} />}
+              {seccionAdmin === "exportar" && <ExportarReportes token={tokenJWT} />}
+            </Suspense>
           </div>
         </main>
       </div>
@@ -260,7 +303,9 @@ function App() {
 
       <ModalReporte isOpen={modalAbierto} onClose={() => setModalAbierto(false)} onSubmit={manejarEnvioReporte} ubicacion={ubicacionUsuario} />
       <DirectorioEmergencia isOpen={emergenciasAbierto} onClose={() => setEmergenciasAbierto(false)} />
-      <SuscripcionAlerta isOpen={alertasAbierto} onClose={() => setAlertasAbierto(false)} />
+      <Suspense fallback={null}>
+        <SuscripcionAlerta isOpen={alertasAbierto} onClose={() => setAlertasAbierto(false)} />
+      </Suspense>
     </div>
   );
 }

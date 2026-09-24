@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Shield, CheckCircle, XCircle } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
-const PanelAdmin = () => {
+const PanelAdmin = ({ token }) => {
   const [reportes, setReportes] = useState([]);
 
   const cargarReportes = async () => {
     try {
       const respuesta = await fetch(
         `${API_BASE_URL}/api/reportes/pendientes`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       const datos = await respuesta.json();
       setReportes(datos);
@@ -25,7 +26,7 @@ const PanelAdmin = () => {
     try {
       await fetch(`${API_BASE_URL}/api/reportes/${id}/estado`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ nuevo_estado: estado }),
       });
 
