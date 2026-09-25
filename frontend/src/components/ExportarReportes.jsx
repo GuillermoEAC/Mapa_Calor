@@ -1,20 +1,22 @@
 import React, { useState } from "react";
-import { Download, Filter, CheckCircle } from "lucide-react";
+import { Download, Filter, CheckCircle2, FileSpreadsheet, AlertCircle, Loader2 } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CU-7: Exportar Reportes (CSV)
-// ─────────────────────────────────────────────────────────────────────────────
 const ExportarReportes = ({ token }) => {
   const [estado, setEstado] = useState("todos");
   const [tipo, setTipo] = useState("todos");
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
+  const [descargando, setDescargando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState(false);
+  const [error, setError] = useState("");
 
   const manejarDescarga = async () => {
-    const params = new URLSearchParams();
+    setDescargando(true);
+    setError("");
+    setMensajeExito(false);
 
+    const params = new URLSearchParams();
     if (estado !== "todos") params.append("estado", estado);
     if (tipo !== "todos") params.append("tipo", tipo);
     if (desde) params.append("desde", desde);
@@ -25,120 +27,150 @@ const ExportarReportes = ({ token }) => {
 
     try {
       const respuesta = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!respuesta.ok) throw new Error("Error al exportar");
+      if (!respuesta.ok) throw new Error("Error en servidor al generar archivo");
 
       const blob = await respuesta.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = "reportes_export.csv";
+      a.download = `reportes_los_mochis_${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(blobUrl);
 
-      // Mostrar mensaje de éxito
       setMensajeExito(true);
-      setTimeout(() => setMensajeExito(false), 3000);
-    } catch (error) {
-      alert("Error al descargar los reportes. Verifica tu sesión.");
+      setTimeout(() => setMensajeExito(false), 4000);
+    } catch (err) {
+      setError("No se pudo descargar el archivo. Verifica tu conexión y sesión.");
+    } finally {
+      setDescargando(false);
     }
   };
 
   return (
-    <div style={{ padding: "30px" }}>
-      <div
-        style={{
-          backgroundColor: "white",
-          borderRadius: "12px",
-          padding: "30px",
-          boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
-          maxWidth: "700px",
-          margin: "0 auto",
-        }}
-      >
-        {/* Encabezado */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "25px" }}>
-          <div
-            style={{
-              backgroundColor: "#3B82F6",
-              padding: "10px",
-              borderRadius: "10px",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Download size={24} />
-          </div>
-          <div>
-            <h2 style={{ margin: 0, color: "#1E293B" }}>Exportar Reportes</h2>
-            <p style={{ margin: 0, fontSize: "14px", color: "#64748B" }}>
-              Descarga los reportes en formato CSV con los filtros deseados
-            </p>
-          </div>
-        </div>
+    <div style={{ maxWidth: "680px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
+      {/* Título */}
+      <div className="admin-card" style={{ padding: "20px 24px" }}>
+        <h2
+          style={{
+            margin: 0,
+            fontSize: "18px",
+            fontWeight: 700,
+            color: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <FileSpreadsheet size={22} color="#38bdf8" />
+          <span>Exportación de Reportes e Incidencias</span>
+        </h2>
+        <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
+          Genera archivos compatibles con Excel, PowerBI y software SIG para análisis institucional.
+        </p>
+      </div>
 
-        {/* Filtros */}
+      {/* Alerta de éxito */}
+      {mensajeExito && (
+        <div
+          className="animate-fade-in"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            backgroundColor: "rgba(16, 185, 129, 0.12)",
+            border: "1px solid rgba(16, 185, 129, 0.3)",
+            color: "#6ee7b7",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            fontSize: "13px",
+          }}
+        >
+          <CheckCircle2 size={18} color="#10b981" />
+          <span>¡Archivo CSV exportado exitosamente! La descarga se ha iniciado en tu navegador.</span>
+        </div>
+      )}
+
+      {/* Alerta de error */}
+      {error && (
+        <div
+          className="animate-fade-in"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            backgroundColor: "rgba(244, 63, 94, 0.12)",
+            border: "1px solid rgba(244, 63, 94, 0.3)",
+            color: "#fda4af",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            fontSize: "13px",
+          }}
+        >
+          <AlertCircle size={18} color="#f43f5e" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Formulario de Exportación */}
+      <div className="admin-card" style={{ padding: "28px" }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: "8px",
             marginBottom: "20px",
-            color: "#64748B",
+            color: "#e4e4e7",
             fontSize: "14px",
-            fontWeight: "600",
+            fontWeight: 600,
           }}
         >
-          <Filter size={16} />
-          Filtros de exportación
+          <Filter size={16} color="#38bdf8" />
+          <span>Filtros de extracción</span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "25px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "18px", marginBottom: "24px" }}>
           {/* Estado */}
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{ fontWeight: "bold", fontSize: "14px", color: "#1E293B" }}>Estado</label>
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: "#a1a1aa" }}>Estado del Reporte</label>
             <select
               value={estado}
               onChange={(e) => setEstado(e.target.value)}
               style={{
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                fontSize: "14px",
-                backgroundColor: "white",
-                cursor: "pointer",
+                padding: "11px 14px",
+                fontSize: "13.5px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(9, 9, 11, 0.6) !important",
+                borderColor: "rgba(255, 255, 255, 0.1) !important",
               }}
             >
-              <option value="todos">Todos</option>
-              <option value="PENDIENTE">Pendiente</option>
-              <option value="APROBADO">Aprobado</option>
-              <option value="RECHAZADO">Rechazado</option>
-              <option value="HISTORICO">Histórico</option>
+              <option value="todos">Todos los Estados</option>
+              <option value="PENDIENTE">Pendientes de Moderación</option>
+              <option value="APROBADO">Aprobados (En Mapa)</option>
+              <option value="RECHAZADO">Rechazados</option>
+              <option value="HISTORICO">Históricos Depurados</option>
             </select>
           </div>
 
           {/* Tipo */}
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{ fontWeight: "bold", fontSize: "14px", color: "#1E293B" }}>Tipo de Incidente</label>
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: "#a1a1aa" }}>Categoría de Incidente</label>
             <select
               value={tipo}
               onChange={(e) => setTipo(e.target.value)}
               style={{
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                fontSize: "14px",
-                backgroundColor: "white",
-                cursor: "pointer",
+                padding: "11px 14px",
+                fontSize: "13.5px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(9, 9, 11, 0.6) !important",
+                borderColor: "rgba(255, 255, 255, 0.1) !important",
               }}
             >
-              <option value="todos">Todos</option>
+              <option value="todos">Todas las categorías</option>
               <option value="1">Robo / Asalto</option>
               <option value="2">Vandalismo</option>
               <option value="3">Fallo de Alumbrado</option>
@@ -148,79 +180,72 @@ const ExportarReportes = ({ token }) => {
 
           {/* Fecha Desde */}
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{ fontWeight: "bold", fontSize: "14px", color: "#1E293B" }}>Desde</label>
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: "#a1a1aa" }}>Fecha Desde</label>
             <input
               type="date"
               value={desde}
               onChange={(e) => setDesde(e.target.value)}
               style={{
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                fontSize: "14px",
+                padding: "10px 14px",
+                fontSize: "13px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(9, 9, 11, 0.6) !important",
+                borderColor: "rgba(255, 255, 255, 0.1) !important",
               }}
             />
           </div>
 
           {/* Fecha Hasta */}
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{ fontWeight: "bold", fontSize: "14px", color: "#1E293B" }}>Hasta</label>
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: "#a1a1aa" }}>Fecha Hasta</label>
             <input
               type="date"
               value={hasta}
               onChange={(e) => setHasta(e.target.value)}
               style={{
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                fontSize: "14px",
+                padding: "10px 14px",
+                fontSize: "13px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(9, 9, 11, 0.6) !important",
+                borderColor: "rgba(255, 255, 255, 0.1) !important",
               }}
             />
           </div>
         </div>
 
-        {/* Mensaje de éxito */}
-        {mensajeExito && (
-          <div
-            style={{
-              backgroundColor: "#ECFDF5",
-              border: "1px solid #10B981",
-              borderRadius: "8px",
-              padding: "12px 16px",
-              marginBottom: "20px",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              color: "#065F46",
-              fontSize: "14px",
-            }}
-          >
-            <CheckCircle size={18} color="#10B981" />
-            ¡Descarga iniciada exitosamente!
-          </div>
-        )}
-
-        {/* Botón de descarga */}
+        {/* Botón Descargar */}
         <button
           onClick={manejarDescarga}
+          disabled={descargando}
           style={{
-            backgroundColor: "#3B82F6",
-            color: "white",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            fontSize: "16px",
+            width: "100%",
+            padding: "13px",
+            borderRadius: "12px",
+            background: "linear-gradient(135deg, #0284c7 0%, #2563eb 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: 700,
+            cursor: descargando ? "wait" : "pointer",
             display: "flex",
             alignItems: "center",
-            gap: "10px",
-            width: "100%",
             justifyContent: "center",
+            gap: "10px",
+            boxShadow: "0 10px 25px -4px rgba(37, 99, 235, 0.4)",
+            opacity: descargando ? 0.75 : 1,
           }}
         >
-          <Download size={20} />
-          Descargar CSV
+          {descargando ? (
+            <>
+              <Loader2 size={18} style={{ animation: "spin 0.8s linear infinite" }} />
+              <span>Generando archivo CSV...</span>
+            </>
+          ) : (
+            <>
+              <Download size={18} />
+              <span>Descargar Archivo CSV</span>
+            </>
+          )}
         </button>
       </div>
     </div>

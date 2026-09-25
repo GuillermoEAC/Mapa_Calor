@@ -64,6 +64,20 @@ const MapRefRegister = ({ setMap }) => {
   return null;
 };
 
+const DarkModeManager = ({ isDark }) => {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    if (!container) return;
+    if (isDark) {
+      container.classList.add("mapa-modo-oscuro");
+    } else {
+      container.classList.remove("mapa-modo-oscuro");
+    }
+  }, [isDark, map]);
+  return null;
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Componente: Capa de Mapa de Calor (leaflet.heat) — Memoizado
 // ─────────────────────────────────────────────────────────────────────────────
@@ -710,6 +724,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
       >
         <ZoomControl position="bottomright" />
         <MapRefRegister setMap={(map) => { mapRef.current = map; }} />
+        <DarkModeManager isDark={estiloMapaActivo === "oscuro"} />
         <TileLayer
           key={estiloMapaActivo}
           url={ESTILOS_MAPA[estiloMapaActivo].url}

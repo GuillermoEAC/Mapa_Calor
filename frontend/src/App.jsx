@@ -3,7 +3,7 @@ import MapaInteractivo from "./components/MapaInteractivo";
 import ModalReporte from "./components/ModalReporte";
 import LoginAdmin from "./components/LoginAdmin";
 import DirectorioEmergencia from "./components/DirectorioEmergencia";
-import { Shield, AlertTriangle, ArrowLeft, BarChart3, Settings, PhoneCall, ListFilter, History, Bell, Download } from "lucide-react";
+import { Shield, AlertTriangle, ArrowLeft, BarChart3, Settings, PhoneCall, ListFilter, History, Bell, Download, LogOut } from "lucide-react";
 import { API_BASE_URL } from "./config";
 
 // ── Lazy loading: componentes del admin solo se cargan si el usuario accede a /admin ──
@@ -161,58 +161,119 @@ function App() {
 
     return (
       <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-deep)" }}>
-        <header className="glass-panel" style={{ margin: "16px 20px 0 20px", padding: "14px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 1000 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+        <header
+          style={{
+            margin: "14px 18px 0 18px",
+            padding: "12px 20px",
+            background: "rgba(24, 24, 27, 0.95)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 30px rgba(0, 0, 0, 0.4)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          {/* Logo y Volver */}
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <button 
               onClick={() => { window.history.pushState({}, '', '/'); setVistaActual("mapa"); }} 
               className="btn-action"
-              style={{ padding: "8px 16px" }}
+              style={{
+                padding: "8px 14px",
+                fontSize: "12.5px",
+                borderRadius: "10px",
+                gap: "6px",
+                background: "rgba(255, 255, 255, 0.04)",
+                borderColor: "rgba(255, 255, 255, 0.08)",
+              }}
             >
-              <ArrowLeft size={16} /> Volver al Mapa
+              <ArrowLeft size={15} /> Volver al Mapa
             </button>
+
+            <div style={{ height: "20px", width: "1px", background: "rgba(255,255,255,0.1)" }} />
+
+            {/* Navegación pestañas */}
             <nav style={{ display: "flex", gap: "6px" }}>
-              <button 
-                onClick={() => setSeccionAdmin("moderacion")}
-                className={`btn-action ${seccionAdmin === "moderacion" ? "btn-primary" : ""}`}
-              >
-                <ListFilter size={15} /> Moderación
-              </button>
-              <button 
-                onClick={() => setSeccionAdmin("estadisticas")}
-                className={`btn-action ${seccionAdmin === "estadisticas" ? "btn-primary" : ""}`}
-              >
-                <BarChart3 size={15} /> Estadísticas
-              </button>
-              <button 
-                onClick={() => setSeccionAdmin("config")}
-                className={`btn-action ${seccionAdmin === "config" ? "btn-primary" : ""}`}
-              >
-                <Settings size={15} /> Configuración
-              </button>
-              <button 
-                onClick={() => setSeccionAdmin("historico")}
-                className={`btn-action ${seccionAdmin === "historico" ? "btn-primary" : ""}`}
-              >
-                <History size={15} /> Historial
-              </button>
-              <button 
-                onClick={() => setSeccionAdmin("exportar")}
-                className={`btn-action ${seccionAdmin === "exportar" ? "btn-primary" : ""}`}
-              >
-                <Download size={15} /> Exportar
-              </button>
+              {[
+                { id: "moderacion", label: "Moderación", icon: ListFilter },
+                { id: "estadisticas", label: "Estadísticas", icon: BarChart3 },
+                { id: "config", label: "Configuración", icon: Settings },
+                { id: "historico", label: "Historial", icon: History },
+                { id: "exportar", label: "Exportar", icon: Download },
+              ].map((tab) => {
+                const activo = seccionAdmin === tab.id;
+                const IconComponent = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSeccionAdmin(tab.id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "7px",
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      fontSize: "13px",
+                      fontWeight: activo ? 600 : 500,
+                      cursor: "pointer",
+                      border: activo ? "1px solid rgba(56, 189, 248, 0.4)" : "1px solid transparent",
+                      background: activo
+                        ? "linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%)"
+                        : "transparent",
+                      color: activo ? "#38bdf8" : "#a1a1aa",
+                      boxShadow: activo ? "0 0 15px rgba(56, 189, 248, 0.15)" : "none",
+                      transition: "all 0.18s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!activo) e.currentTarget.style.color = "#f4f4f5";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!activo) e.currentTarget.style.color = "#a1a1aa";
+                    }}
+                  >
+                    <IconComponent size={15} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
             </nav>
           </div>
+
+          {/* Botón Cerrar Sesión */}
           <button 
             onClick={cerrarSesion} 
-            className="btn-action"
-            style={{ background: "rgba(244, 63, 94, 0.15)", borderColor: "rgba(244, 63, 94, 0.3)", color: "#f43f5e" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 14px",
+              borderRadius: "10px",
+              fontSize: "12.5px",
+              fontWeight: 600,
+              cursor: "pointer",
+              background: "rgba(244, 63, 94, 0.12)",
+              border: "1px solid rgba(244, 63, 94, 0.25)",
+              color: "#fb7185",
+              transition: "all 0.18s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(244, 63, 94, 0.22)";
+              e.currentTarget.style.color = "#f43f5e";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(244, 63, 94, 0.12)";
+              e.currentTarget.style.color = "#fb7185";
+            }}
           >
-            Cerrar Sesión
+            <LogOut size={14} />
+            <span>Cerrar Sesión</span>
           </button>
         </header>
-        <main style={{ flex: 1, overflowY: "auto", padding: "20px", backgroundColor: "var(--bg-deep)" }}>
-          <div className="animate-fade-in" style={{ height: "100%" }}>
+
+        <main style={{ flex: 1, overflowY: "auto", padding: "18px 20px", backgroundColor: "var(--bg-deep)" }}>
+          <div className="animate-fade-in" style={{ height: "100%", maxWidth: "1400px", margin: "0 auto" }}>
             <Suspense fallback={<LoadingSpinner />}>
               {seccionAdmin === "moderacion" && <PanelAdmin token={tokenJWT} />}
               {seccionAdmin === "estadisticas" && <Estadisticas token={tokenJWT} />}
