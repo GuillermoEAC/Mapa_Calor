@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMapEvents, useMap } from "react-leaflet";
-import { Share2, ListFilter, X, User } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMapEvents, useMap, ZoomControl } from "react-leaflet";
+import { Share2, X, User, SlidersHorizontal, Check, Calendar } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -170,14 +170,22 @@ const crearIconoPersonalizado = (color, tipo) => {
   });
 };
 
+// ── OPTIMIZACIÓN: Pre-generar los 4 iconos posibles una sola vez para no instanciarlos por cada marcador ──
+const ICONOS_CACHE = {
+  1: crearIconoPersonalizado(TIPOS_INCIDENTES[1].color, 1),
+  2: crearIconoPersonalizado(TIPOS_INCIDENTES[2].color, 2),
+  3: crearIconoPersonalizado(TIPOS_INCIDENTES[3].color, 3),
+  4: crearIconoPersonalizado(TIPOS_INCIDENTES[4].color, 4),
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Componente: Marcador individual de incidente — Memoizado
 // ─────────────────────────────────────────────────────────────────────────────
 const IncidenteMarker = memo(({ punto }) => {
   const infoTipo = TIPOS_INCIDENTES[punto.tipo] || { color: "#8b5cf6", nombre: "Desconocido" };
   
-  // Memoizar el icono para evitar regenerarlo innecesariamente en re-renders
-  const customIcon = useMemo(() => crearIconoPersonalizado(infoTipo.color, punto.tipo), [infoTipo.color, punto.tipo]);
+  // Usar el icono pre-generado desde la caché (O(1) memoria en lugar de O(N))
+  const customIcon = ICONOS_CACHE[punto.tipo] || ICONOS_CACHE[1];
 
   return (
     <Marker
@@ -223,8 +231,10 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   const [puntosRaw, setPuntosRaw] = useState([]);
   // Filtros: Set con IDs de tipo activos. Inicia con todos activos.
   const [filtrosActivos, setFiltrosActivos] = useState(new Set(["1", "2", "3", "4"]));
-  const [mostrarFiltros, setMostrarFiltros] = useState(true);
   const [estiloMapaActivo, setEstiloMapaActivo] = useState("google_hibrido");
+
+  const [drawerAbierto, setDrawerAbierto] = useState(false);
+  const [filtroTiempo, setFiltroTiempo] = useState("todos"); // '24h' | '7d' | '30d' | 'todos'
 
   const [miUbicacionActual, setMiUbicacionActual] = useState(null);
   const mapRef = useRef(null);
@@ -248,15 +258,16 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     }
   }, []);
   const [configMapa, setConfigMapa] = useState({ radio_puntos: 500 });
-  const [mapCenter, setMapCenter] = useState(
-    compartirParams ? [compartirParams.lat, compartirParams.lng] : CENTRO_LOS_MOCHIS
-  );
-  const [mapZoom, setMapZoom] = useState(compartirParams?.zoom || 13);
+  
+  // ── OPTIMIZACIÓN: Usar refs en lugar de estado para la posición del mapa. 
+  // Esto evita re-renderizar todo el árbol de marcadores cada vez que se mueve el mapa.
+  const mapCenterRef = useRef(compartirParams ? [compartirParams.lat, compartirParams.lng] : CENTRO_LOS_MOCHIS);
+  const mapZoomRef = useRef(compartirParams?.zoom || 13);
   const [toastVisible, setToastVisible] = useState(false);
 
   // Callbacks estables para el MapTracker
-  const handleCenterChange = useCallback((c) => setMapCenter(c), []);
-  const handleZoomChange = useCallback((z) => setMapZoom(z), []);
+  const handleCenterChange = useCallback((c) => { mapCenterRef.current = c; }, []);
+  const handleZoomChange = useCallback((z) => { mapZoomRef.current = z; }, []);
 
   // ── Toggle de filtro individual ──
   const toggleFiltro = useCallback((id) => {
@@ -282,7 +293,9 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   // ── Compartir vista ──
   const compartirVista = useCallback(() => {
     const filtroStr = [...filtrosActivos].join(",");
-    const url = `${window.location.origin}${window.location.pathname}?lat=${mapCenter[0].toFixed(5)}&lng=${mapCenter[1].toFixed(5)}&zoom=${mapZoom}&filtro=${filtroStr}`;
+    const center = mapCenterRef.current;
+    const zoom = mapZoomRef.current;
+    const url = `${window.location.origin}${window.location.pathname}?lat=${center[0].toFixed(5)}&lng=${center[1].toFixed(5)}&zoom=${zoom}&filtro=${filtroStr}`;
     navigator.clipboard
       .writeText(url)
       .then(() => {
@@ -290,7 +303,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         setTimeout(() => setToastVisible(false), 2000);
       })
       .catch(() => alert("No se pudo copiar el enlace."));
-  }, [mapCenter, mapZoom, filtrosActivos]);
+  }, [filtrosActivos]);
 
   // ── Carga de datos (una sola vez) ──
   useEffect(() => {
@@ -330,11 +343,28 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     return () => { cancelado = true; };
   }, []);
 
-  // ── Puntos filtrados (memoizado) ──
-  const puntosFiltrados = useMemo(
-    () => puntosRaw.filter((p) => filtrosActivos.has(p.tipo.toString())),
-    [puntosRaw, filtrosActivos]
-  );
+  // ── Puntos filtrados por categoría y por tiempo (memoizado) ──
+  const puntosFiltrados = useMemo(() => {
+    const ahora = Date.now();
+    return puntosRaw.filter((p) => {
+      // 1. Filtro por categoría de incidente
+      if (!filtrosActivos.has(p.tipo.toString())) return false;
+
+      // 2. Filtro por rango temporal
+      if (filtroTiempo === "todos") return true;
+      if (!p.fecha) return true;
+
+      const tiempoPunto = new Date(p.fecha).getTime();
+      if (isNaN(tiempoPunto)) return true;
+
+      const diffHoras = (ahora - tiempoPunto) / (1000 * 60 * 60);
+      if (filtroTiempo === "24h") return diffHoras <= 24;
+      if (filtroTiempo === "7d") return diffHoras <= 24 * 7;
+      if (filtroTiempo === "30d") return diffHoras <= 24 * 30;
+
+      return true;
+    });
+  }, [puntosRaw, filtrosActivos, filtroTiempo]);
 
   // ── Datos del heatmap (memoizado para evitar re-crear el array) ──
   const heatData = useMemo(
@@ -347,186 +377,323 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     [configMapa.radio_puntos]
   );
 
+  // Conteo en tiempo real según el filtro temporal activo
+  const conteoPorTipo = useMemo(() => {
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    const ahora = Date.now();
+
+    puntosRaw.forEach((p) => {
+      let cumpleTiempo = true;
+      if (filtroTiempo !== "todos" && p.fecha) {
+        const tiempoPunto = new Date(p.fecha).getTime();
+        if (!isNaN(tiempoPunto)) {
+          const diffHoras = (ahora - tiempoPunto) / (1000 * 60 * 60);
+          if (filtroTiempo === "24h") cumpleTiempo = diffHoras <= 24;
+          else if (filtroTiempo === "7d") cumpleTiempo = diffHoras <= 24 * 7;
+          else if (filtroTiempo === "30d") cumpleTiempo = diffHoras <= 24 * 30;
+        }
+      }
+
+      if (cumpleTiempo && counts[p.tipo] !== undefined) {
+        counts[p.tipo]++;
+      }
+    });
+    return counts;
+  }, [puntosRaw, filtroTiempo]);
+
   const todosActivos = filtrosActivos.size === 4;
+
+  const textoTiempo = {
+    todos: "",
+    "30d": " (últimos 30 días)",
+    "7d": " (últimos 7 días)",
+    "24h": " (últimas 24h)",
+  }[filtroTiempo];
 
   return (
     <div style={{ position: "relative", height: "100%", width: "100%" }}>
-      {/* Botón flotante para mostrar filtros si están ocultos */}
-      {!mostrarFiltros && (
-        <button
-          onClick={() => setMostrarFiltros(true)}
-          className="btn-premium btn-secondary"
-          style={{
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            zIndex: 1000,
-            padding: "10px 14px",
-            fontSize: "13.5px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          <ListFilter size={16} />
-          Filtrar Mapa
-        </button>
-      )}
-
-      {/* ── Panel flotante de Filtros ── */}
-      {mostrarFiltros && (
-        <div
-          className="glass-card animate-fade-in"
-          style={{
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            zIndex: 1000,
-            padding: "20px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            minWidth: "240px",
-            background: "#1e293b",
-            border: "1px solid #334155",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-            <h3
-              style={{
-                margin: 0,
-                fontSize: "14px",
-                fontWeight: "800",
-                color: "#f8fafc",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
-              }}
-            >
-              Filtrar Mapa
-            </h3>
-            <button
-              onClick={() => setMostrarFiltros(false)}
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: "#94a3b8",
-                padding: "4px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              title="Ocultar filtros"
-              onMouseEnter={(e) => e.currentTarget.style.color = "#f8fafc"}
-              onMouseLeave={(e) => e.currentTarget.style.color = "#94a3b8"}
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-        {/* Checkbox: Todos */}
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            cursor: "pointer",
-            fontSize: "13.5px",
-            color: "#cbd5e1",
-            padding: "6px 10px",
-            borderRadius: "8px",
-            background: todosActivos ? "rgba(255,255,255,0.06)" : "transparent",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={todosActivos}
-            onChange={toggleTodos}
-            style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "#8b5cf6" }}
-          />
-          <span style={{ fontWeight: todosActivos ? "600" : "400" }}>Todos los incidentes</span>
-        </label>
-
-        {/* Checkboxes individuales */}
-        {Object.entries(TIPOS_INCIDENTES).map(([id, info]) => {
-          const activo = filtrosActivos.has(id);
-          return (
-            <label
-              key={id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                cursor: "pointer",
-                fontSize: "13.5px",
-                color: "#cbd5e1",
-                padding: "6px 10px",
-                borderRadius: "8px",
-                background: activo ? "rgba(255,255,255,0.06)" : "transparent",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={activo}
-                onChange={() => toggleFiltro(id)}
-                style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: info.color }}
-              />
-              <span
-                style={{
-                  display: "inline-block",
-                  width: "10px",
-                  height: "10px",
-                  borderRadius: "50%",
-                  backgroundColor: info.color,
-                  opacity: activo ? 1 : 0.4,
-                }}
-              />
-              <span style={{ fontWeight: activo ? "600" : "400", opacity: activo ? 1 : 0.5 }}>
-                {info.nombre}
-              </span>
-            </label>
-          );
-        })}
-
-        {/* Selector de Estilo */}
-        <h3
-          style={{
-            margin: "10px 0 4px 0",
-            fontSize: "14px",
-            fontWeight: "800",
-            color: "#f8fafc",
-            letterSpacing: "1px",
-            textTransform: "uppercase",
-            borderTop: "1px solid rgba(255,255,255,0.1)",
-            paddingTop: "15px",
-          }}
-        >
-          Estilo de Mapa
-        </h3>
-        <select
-          value={estiloMapaActivo}
-          onChange={(e) => setEstiloMapaActivo(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "8px",
-            background: "rgba(255,255,255,0.06)",
-            color: "#cbd5e1",
-            border: "1px solid rgba(255,255,255,0.1)",
-            outline: "none",
-            cursor: "pointer",
-            fontSize: "13.5px",
-            fontFamily: "inherit",
-          }}
-        >
-          {Object.entries(ESTILOS_MAPA).map(([id, info]) => (
-            <option key={id} value={id} style={{ background: "#0f172a" }}>
-              {info.nombre}
-            </option>
-          ))}
-        </select>
+      {/* ── Contador flotante de incidentes visibles ── */}
+      <div 
+        className="glass-pill animate-fade-in"
+        style={{
+          position: "absolute",
+          top: "80px",
+          left: "20px",
+          zIndex: 1000,
+          padding: "7px 14px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          fontSize: "12px",
+          fontWeight: 600,
+          color: "#e2e8f0",
+          boxShadow: "0 6px 16px rgba(0,0,0,0.35)",
+        }}
+      >
+        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8" }} />
+        <span>{puntosFiltrados.length} {puntosFiltrados.length === 1 ? "incidente visible" : "incidentes visibles"}{textoTiempo}</span>
       </div>
+
+      {/* ── Botón flotante para abrir Drawer de Filtros y Capas ── */}
+      <button
+        onClick={() => setDrawerAbierto(true)}
+        className="btn-action glass-pill animate-fade-in"
+        style={{
+          position: "absolute",
+          top: "80px",
+          right: "20px",
+          zIndex: 1000,
+          padding: "8px 16px",
+          fontSize: "13px",
+          fontWeight: 600,
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          boxShadow: "0 6px 16px rgba(0,0,0,0.35)",
+        }}
+      >
+        <SlidersHorizontal size={15} />
+        Filtros y Capas ({filtrosActivos.size}/4)
+      </button>
+
+      {/* ── Drawer Lateral Deslizante ── */}
+      {drawerAbierto && (
+        <>
+          {/* Backdrop suave */}
+          <div
+            onClick={() => setDrawerAbierto(false)}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "rgba(0,0,0,0.5)",
+              zIndex: 1400,
+            }}
+          />
+
+          <div
+            className="animate-fade-in"
+            style={{
+              position: "fixed",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: "320px",
+              maxWidth: "85vw",
+              background: "#18181b",
+              borderLeft: "1px solid rgba(255,255,255,0.12)",
+              boxShadow: "-10px 0 35px rgba(0,0,0,0.6)",
+              zIndex: 1500,
+              padding: "24px 20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+              overflowY: "auto",
+            }}
+          >
+            {/* Header del drawer */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#f8fafc", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <SlidersHorizontal size={18} color="#38bdf8" /> Filtros y Capas
+                </h3>
+                <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#94a3b8" }}>
+                  Personaliza los incidentes en el mapa
+                </p>
+              </div>
+              <button
+                onClick={() => setDrawerAbierto(false)}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "none",
+                  borderRadius: "8px",
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#94a3b8",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Sección incidentes */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa" }}>
+                  Tipos de Incidentes
+                </span>
+                <button
+                  onClick={toggleTodos}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#38bdf8",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  {todosActivos ? "Desmarcar todos" : "Seleccionar todos"}
+                </button>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {Object.entries(TIPOS_INCIDENTES).map(([id, info]) => {
+                  const activo = filtrosActivos.has(id);
+                  const count = conteoPorTipo[id] || 0;
+                  return (
+                    <div
+                      key={id}
+                      onClick={() => toggleFiltro(id)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        background: activo ? "rgba(255, 255, 255, 0.05)" : "transparent",
+                        border: `1px solid ${activo ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.05)"}`,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: info.color }} />
+                        <span style={{ fontSize: "13px", fontWeight: 600, color: activo ? "#f4f4f5" : "#71717a" }}>
+                          {info.nombre}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", background: "rgba(255,255,255,0.06)", padding: "2px 7px", borderRadius: "10px" }}>
+                          {count}
+                        </span>
+                        <div
+                          style={{
+                            width: "18px",
+                            height: "18px",
+                            borderRadius: "4px",
+                            border: `1.5px solid ${activo ? "#38bdf8" : "#52525b"}`,
+                            background: activo ? "#38bdf8" : "transparent",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {activo && <Check size={13} color="#09090b" strokeWidth={3} />}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sección: Período de Tiempo */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Calendar size={13} color="#38bdf8" /> Rango Temporal
+                </span>
+                {filtroTiempo !== "todos" && (
+                  <button
+                    onClick={() => setFiltroTiempo("todos")}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#38bdf8",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    Restablecer
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                {[
+                  { id: "todos", label: "Histórico Todo", sub: "Todos los registros" },
+                  { id: "30d", label: "Último Mes", sub: "30 días" },
+                  { id: "7d", label: "Última Semana", sub: "7 días" },
+                  { id: "24h", label: "Hoy", sub: "Últimas 24 horas" },
+                ].map((item) => {
+                  const activo = filtroTiempo === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setFiltroTiempo(item.id)}
+                      style={{
+                        padding: "8px 10px",
+                        borderRadius: "8px",
+                        background: activo ? "rgba(56, 189, 248, 0.14)" : "rgba(255, 255, 255, 0.03)",
+                        border: `1px solid ${activo ? "#38bdf8" : "rgba(255, 255, 255, 0.06)"}`,
+                        color: activo ? "#38bdf8" : "#94a3b8",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        gap: "2px",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                        textAlign: "left",
+                      }}
+                    >
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: activo ? "#38bdf8" : "#f4f4f5" }}>
+                        {item.label}
+                      </span>
+                      <span style={{ fontSize: "10px", color: activo ? "#7dd3fc" : "#71717a" }}>
+                        {item.sub}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sección estilos de mapa */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "6px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa" }}>
+                Estilo del Mapa Base
+              </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {Object.entries(ESTILOS_MAPA).map(([id, info]) => {
+                  const seleccionado = estiloMapaActivo === id;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => setEstiloMapaActivo(id)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "9px 12px",
+                        borderRadius: "8px",
+                        background: seleccionado ? "rgba(56, 189, 248, 0.12)" : "rgba(255,255,255,0.02)",
+                        border: `1px solid ${seleccionado ? "#38bdf8" : "rgba(255,255,255,0.05)"}`,
+                        color: seleccionado ? "#38bdf8" : "#a1a1aa",
+                        fontSize: "12.5px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      <span>{info.nombre}</span>
+                      {seleccionado && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#38bdf8" }} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* ── Mapa ── */}
@@ -538,7 +705,9 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         maxBoundsViscosity={1.0}
         style={{ height: "100%", width: "100%" }}
         preferCanvas={true}
+        zoomControl={false}
       >
+        <ZoomControl position="bottomright" />
         <MapRefRegister setMap={(map) => { mapRef.current = map; }} />
         <TileLayer
           key={estiloMapaActivo}

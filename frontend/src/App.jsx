@@ -160,63 +160,58 @@ function App() {
     }
 
     return (
-      <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "#0f172a" }}>
-        <header className="glass-header" style={{ padding: "15px 30px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 1000 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
+      <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-deep)" }}>
+        <header className="glass-panel" style={{ margin: "16px 20px 0 20px", padding: "14px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 1000 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
             <button 
               onClick={() => { window.history.pushState({}, '', '/'); setVistaActual("mapa"); }} 
-              className="btn-premium btn-secondary"
-              style={{ padding: "10px 18px", fontSize: "14px" }}
+              className="btn-action"
+              style={{ padding: "8px 16px" }}
             >
               <ArrowLeft size={16} /> Volver al Mapa
             </button>
-            <nav style={{ display: "flex", gap: "8px" }}>
+            <nav style={{ display: "flex", gap: "6px" }}>
               <button 
                 onClick={() => setSeccionAdmin("moderacion")}
-                className={`btn-premium ${seccionAdmin === "moderacion" ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "10px 18px", fontSize: "14px" }}
+                className={`btn-action ${seccionAdmin === "moderacion" ? "btn-primary" : ""}`}
               >
-                <ListFilter size={16} /> Moderación
+                <ListFilter size={15} /> Moderación
               </button>
               <button 
                 onClick={() => setSeccionAdmin("estadisticas")}
-                className={`btn-premium ${seccionAdmin === "estadisticas" ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "10px 18px", fontSize: "14px" }}
+                className={`btn-action ${seccionAdmin === "estadisticas" ? "btn-primary" : ""}`}
               >
-                <BarChart3 size={16} /> Estadísticas
+                <BarChart3 size={15} /> Estadísticas
               </button>
               <button 
                 onClick={() => setSeccionAdmin("config")}
-                className={`btn-premium ${seccionAdmin === "config" ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "10px 18px", fontSize: "14px" }}
+                className={`btn-action ${seccionAdmin === "config" ? "btn-primary" : ""}`}
               >
-                <Settings size={16} /> Configuración
+                <Settings size={15} /> Configuración
               </button>
               <button 
                 onClick={() => setSeccionAdmin("historico")}
-                className={`btn-premium ${seccionAdmin === "historico" ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "10px 18px", fontSize: "14px" }}
+                className={`btn-action ${seccionAdmin === "historico" ? "btn-primary" : ""}`}
               >
-                <History size={16} /> Historial
+                <History size={15} /> Historial
               </button>
               <button 
                 onClick={() => setSeccionAdmin("exportar")}
-                className={`btn-premium ${seccionAdmin === "exportar" ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "10px 18px", fontSize: "14px" }}
+                className={`btn-action ${seccionAdmin === "exportar" ? "btn-primary" : ""}`}
               >
-                <Download size={16} /> Exportar
+                <Download size={15} /> Exportar
               </button>
             </nav>
           </div>
           <button 
             onClick={cerrarSesion} 
-            className="btn-premium btn-danger"
-            style={{ padding: "10px 18px", fontSize: "14px" }}
+            className="btn-action"
+            style={{ background: "rgba(244, 63, 94, 0.15)", borderColor: "rgba(244, 63, 94, 0.3)", color: "#f43f5e" }}
           >
             Cerrar Sesión
           </button>
         </header>
-        <main style={{ flex: 1, overflowY: "auto", padding: "20px", backgroundColor: "#0f172a" }}>
+        <main style={{ flex: 1, overflowY: "auto", padding: "20px", backgroundColor: "var(--bg-deep)" }}>
           <div className="animate-fade-in" style={{ height: "100%" }}>
             <Suspense fallback={<LoadingSpinner />}>
               {seccionAdmin === "moderacion" && <PanelAdmin token={tokenJWT} />}
@@ -232,74 +227,115 @@ function App() {
   }
 
   return (
-    <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "#0f172a" }}>
-      <header className="glass-header" style={{ padding: "18px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 1000, position: "relative" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
-          {/* Logo Premium Simplificado */}
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "44px",
-              height: "44px",
-              borderRadius: "10px",
-              background: "#ef4444",
-              color: "white"
-            }}>
-              <Shield size={22} />
-            </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <h1 style={{ 
-                margin: 0, 
-                fontSize: "24px", 
-                fontWeight: 800, 
-                letterSpacing: "-0.5px",
-                color: "#ffffff",
-                lineHeight: "1.1"
-              }}>
-                Mapa de Inseguridad
-              </h1>
-              <span style={{ fontSize: "10px", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.5px", marginTop: "3px" }}>
-                Monitoreo Colaborativo
-              </span>
-            </div>
-          </div>
-
-
+    <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden", backgroundColor: "var(--bg-deep)" }}>
+      {/* ── LOGO Y TÍTULO FLOTANTE (Esquina superior izquierda - Sin barra de header) ── */}
+      <div
+        className="glass-panel animate-fade-in"
+        style={{
+          position: "absolute",
+          top: "18px",
+          left: "20px",
+          zIndex: 1000,
+          padding: "10px 16px",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "34px",
+            height: "34px",
+            borderRadius: "10px",
+            background: "rgba(255, 255, 255, 0.08)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            color: "#ffffff",
+          }}
+        >
+          <Shield size={18} />
         </div>
-
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <button 
-            onClick={() => setAlertasAbierto(true)} 
-            className="btn-premium btn-purple"
-            title="Alertas de Zona"
-            style={{ width: "42px", height: "42px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+        <div>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "15px",
+              fontWeight: 700,
+              letterSpacing: "-0.3px",
+              color: "#ffffff",
+              lineHeight: "1.2",
+            }}
           >
-            <Bell size={18} />
-          </button>
-          <button 
-            onClick={() => setEmergenciasAbierto(true)} 
-            className="btn-premium btn-warning"
-            title="Emergencias"
-            style={{ width: "42px", height: "42px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-          >
-            <PhoneCall size={18} />
-          </button>
-          <button 
-            onClick={manejarClickReportar} 
-            className="btn-premium btn-danger"
-            title="Reportar Incidente"
-            style={{ width: "42px", height: "42px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-          >
-            <AlertTriangle size={18} />
-          </button>
+            Mapa de Inseguridad
+          </h1>
+          <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500 }}>
+            Los Mochis • Monitoreo Ciudadano
+          </span>
         </div>
-      </header>
+      </div>
 
-      <main style={{ flex: 1, display: "flex", width: "100vw", overflow: "hidden" }}>
-        <MapaInteractivo ubicacionTemporal={ubicacionUsuario} onMapClick={manejarClickMapa} compartirParams={compartirParams} />
+      {/* ── BOTONES DE ACCIÓN FLOTANTES (Esquina superior derecha) ── */}
+      <div
+        className="animate-fade-in"
+        style={{
+          position: "absolute",
+          top: "18px",
+          right: "20px",
+          zIndex: 1000,
+          display: "flex",
+          gap: "8px",
+          alignItems: "center",
+        }}
+      >
+        <button 
+          onClick={() => setAlertasAbierto(true)} 
+          className="btn-action"
+          title="Alertas de Zona por correo"
+        >
+          <Bell size={15} />
+          <span className="hide-mobile">Alertas</span>
+        </button>
+        <button 
+          onClick={() => setEmergenciasAbierto(true)} 
+          className="btn-action"
+          title="Directorio de Números de Emergencia"
+        >
+          <PhoneCall size={15} />
+          <span className="hide-mobile">Emergencias 911</span>
+        </button>
+      </div>
+
+      {/* ── MAPA A PANTALLA COMPLETA ── */}
+      <main style={{ width: "100%", height: "100%" }}>
+        <MapaInteractivo
+          ubicacionTemporal={ubicacionUsuario}
+          onMapClick={manejarClickMapa}
+          compartirParams={compartirParams}
+        />
       </main>
+
+      {/* ── BOTÓN FLOTANTE DESTACADO (FAB) "+ Reportar Incidente" ── */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "26px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 1000,
+        }}
+      >
+        <button 
+          onClick={manejarClickReportar} 
+          className="btn-fab-reportar animate-fade-in"
+          title="Reportar nuevo incidente en tu ubicación"
+        >
+          <AlertTriangle size={18} />
+          <span>Reportar Incidente</span>
+        </button>
+      </div>
 
       <ModalReporte isOpen={modalAbierto} onClose={() => setModalAbierto(false)} onSubmit={manejarEnvioReporte} ubicacion={ubicacionUsuario} />
       <DirectorioEmergencia isOpen={emergenciasAbierto} onClose={() => setEmergenciasAbierto(false)} />

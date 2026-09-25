@@ -33,14 +33,13 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
       padding: "20px"
     }}>
       <div 
-        className="glass-card animate-fade-in"
+        className="glass-panel animate-modal"
         style={{
           width: "100%",
           maxWidth: "460px",
-          padding: "30px",
+          padding: "28px",
           position: "relative",
-          background: "#1e293b",
-          border: "1px solid #334155",
+          borderRadius: "22px",
         }}
       >
         {/* Encabezado */}

@@ -47,14 +47,13 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
       }}
     >
       <div
-        className="glass-card animate-fade-in"
+        className="glass-panel animate-modal"
         style={{
           width: "100%",
           maxWidth: "460px",
-          padding: "30px",
+          padding: "28px",
           position: "relative",
-          background: "#1e293b",
-          border: "1px solid #334155",
+          borderRadius: "22px",
         }}
       >
         {/* Encabezado */}
@@ -143,10 +142,10 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
                 outline: "none"
               }}
             >
-              <option value="robo">Robo / Asalto</option>
-              <option value="vandalismo">Vandalismo</option>
-              <option value="alumbrado">Fallo de Alumbrado</option>
-              <option value="sospechoso">Actividad Sospechosa</option>
+              <option value="robo" style={{ background: "#18181b" }}>Robo / Asalto</option>
+              <option value="vandalismo" style={{ background: "#18181b" }}>Vandalismo</option>
+              <option value="alumbrado" style={{ background: "#18181b" }}>Fallo de Alumbrado</option>
+              <option value="sospechoso" style={{ background: "#18181b" }}>Actividad Sospechosa</option>
             </select>
           </div>
 

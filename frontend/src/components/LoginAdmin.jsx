@@ -38,33 +38,56 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#f8fafc",
+        backgroundColor: "var(--bg-deep)",
+        padding: "20px",
       }}
     >
       <div
+        className="glass-panel animate-modal"
         style={{
-          backgroundColor: "white",
-          padding: "40px",
-          borderRadius: "10px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          padding: "36px 32px",
+          borderRadius: "22px",
           width: "100%",
-          maxWidth: "350px",
+          maxWidth: "380px",
         }}
       >
-        <h2 style={{ textAlign: "center", color: "#1E293B", marginTop: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
-          <Lock size={28} /> Acceso Admin
-        </h2>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "24px" }}>
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
+              background: "linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              boxShadow: "0 8px 20px -3px rgba(56, 189, 248, 0.4)",
+              marginBottom: "12px",
+            }}
+          >
+            <Lock size={22} />
+          </div>
+          <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.4px" }}>
+            Panel de Control
+          </h2>
+          <span style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
+            Acceso exclusivo para moderadores
+          </span>
+        </div>
 
         {error && (
           <div
             style={{
-              backgroundColor: "#fee2e2",
-              color: "#ef4444",
-              padding: "10px",
-              borderRadius: "5px",
-              marginBottom: "15px",
+              backgroundColor: "rgba(244, 63, 94, 0.12)",
+              color: "#fb7185",
+              border: "1px solid rgba(244, 63, 94, 0.25)",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              marginBottom: "18px",
               textAlign: "center",
-              fontSize: "14px",
+              fontSize: "13px",
+              fontWeight: 500,
             }}
           >
             {error}
@@ -73,25 +96,23 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
 
         <form
           onSubmit={manejarEnvio}
-          style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+          style={{ display: "flex", flexDirection: "column", gap: "16px" }}
         >
           <div>
             <label
-              style={{ fontWeight: "bold", fontSize: "14px", color: "#64748b" }}
+              style={{ fontWeight: "600", fontSize: "13px", color: "#cbd5e1", display: "block", marginBottom: "6px" }}
             >
-              Usuario:
+              Usuario o Correo
             </label>
             <input
               type="text"
+              placeholder="admin@tuproyecto.com"
               value={usuario}
               onChange={(e) => setUsuario(e.target.value)}
               style={{
                 width: "100%",
-                padding: "10px",
-                marginTop: "5px",
-                borderRadius: "5px",
-                border: "1px solid #cbd5e1",
-                boxSizing: "border-box",
+                padding: "11px 14px",
+                fontSize: "14px",
               }}
               required
             />
@@ -99,21 +120,19 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
 
           <div>
             <label
-              style={{ fontWeight: "bold", fontSize: "14px", color: "#64748b" }}
+              style={{ fontWeight: "600", fontSize: "13px", color: "#cbd5e1", display: "block", marginBottom: "6px" }}
             >
-              Contraseña:
+              Contraseña
             </label>
             <input
               type="password"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               style={{
                 width: "100%",
-                padding: "10px",
-                marginTop: "5px",
-                borderRadius: "5px",
-                border: "1px solid #cbd5e1",
-                boxSizing: "border-box",
+                padding: "11px 14px",
+                fontSize: "14px",
               }}
               required
             />
@@ -121,15 +140,15 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
 
           <button
             type="submit"
+            className="btn-action btn-primary"
             style={{
-              backgroundColor: "#3B82F6",
-              color: "white",
-              border: "none",
+              justifyContent: "center",
               padding: "12px",
-              borderRadius: "5px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              marginTop: "10px",
+              borderRadius: "12px",
+              fontWeight: 700,
+              fontSize: "14px",
+              marginTop: "8px",
+              boxShadow: "0 8px 20px -4px rgba(56, 189, 248, 0.4)",
             }}
           >
             Iniciar Sesión
@@ -138,16 +157,17 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
           <button
             type="button"
             onClick={onCancelar}
+            className="btn-action"
             style={{
-              backgroundColor: "transparent",
-              color: "#64748b",
-              border: "none",
+              justifyContent: "center",
               padding: "10px",
-              cursor: "pointer",
-              textDecoration: "underline",
+              fontSize: "13px",
+              background: "transparent",
+              borderColor: "transparent",
+              color: "#94a3b8",
             }}
           >
-            Volver al Mapa
+            ← Volver al Mapa Ciudadano
           </button>
         </form>
       </div>

@@ -1,9 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  --glass-bg: #1e293b;
-  --glass-border: #334155;
-  --glass-highlight: #1e293b;
+  --bg-deep: #09090b; /* Zinc 950 */
+  --glass-bg: rgba(24, 24, 27, 0.95); /* Más opaco para mejor rendimiento sin blur */
+  --glass-bg-hover: rgba(39, 39, 42, 0.98);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-focus: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  /* Acentos más sobrios y elegantes */
+  --accent-crimson: #ef4444; /* Rojo suave */
+  --accent-amber: #f59e0b;
+  --accent-purple: #8b5cf6;
+  --accent-blue: #3b82f6;
+  --accent-emerald: #10b981;
+  --text-primary: #f4f4f5; /* Zinc 100 */
+  --text-secondary: #a1a1aa; /* Zinc 400 */
 }
 
 html,
@@ -15,62 +27,120 @@ body,
   height: 100vh;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow: hidden;
-  background-color: #0f172a;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
 }
 
-/* Transiciones generales */
 * {
   box-sizing: border-box;
 }
 
-a, button, input, select, textarea, .glass-card, .btn-premium {
-  transition: all 0.2s ease-in-out;
+/* Transiciones fluidas */
+a, button, input, select, textarea, .glass-panel, .glass-pill, .btn-action {
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Estilos para los Marcadores Personalizados Simplificados */
-.custom-leaflet-icon {
-  background: transparent !important;
-  border: none !important;
+/* ─────────────────────────────────────────────────────────────
+   CLASES GLASSMORPHISM DE VANGUARDIA (OVER-MAP UI)
+   ───────────────────────────────────────────────────────────── */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 18px;
 }
 
-.custom-marker-wrapper {
-  position: relative;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.glass-pill {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 9999px;
 }
 
-.pin-marker {
-  width: 24px;
-  height: 24px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid #ffffff;
-  z-index: 2;
+/* Floating Action Button (FAB) "+ Reportar Incidente" */
+.btn-fab-reportar {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 14.5px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 26px;
+  box-shadow: 0 10px 25px -4px rgba(225, 29, 72, 0.45);
+  position: relative;
+  overflow: hidden;
+  z-index: 1000;
+  transition: all 0.3s ease;
 }
 
-.pin-marker svg {
-  transform: rotate(45deg);
+.btn-fab-reportar:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  box-shadow: 0 12px 28px -4px rgba(225, 29, 72, 0.6);
 }
 
-/* Clases de Botones Simplificados (Flat UI) */
+.btn-fab-reportar:active {
+  transform: translateY(0);
+}
+
+/* Botones flotantes neutros y elegantes */
+.btn-action {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 13.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action:hover {
+  background: var(--glass-bg-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-action:active {
+  transform: translateY(0);
+}
+
+/* Badge de estado en vivo */
+.badge-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 10px #10b981;
+  animation: pulseLive 2s infinite;
+  display: inline-block;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Botones genéricos de interfaz */
 .btn-premium {
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   position: relative;
-  overflow: hidden;
 }
 
 .btn-premium:hover {
@@ -78,83 +148,117 @@ a, button, input, select, textarea, .glass-card, .btn-premium {
   filter: brightness(1.08);
 }
 
-.btn-premium:active {
-  transform: translateY(0);
-  filter: brightness(0.95);
-}
-
-/* Variantes de Botones Planos */
 .btn-danger {
-  background-color: #ef4444;
-  color: white;
-}
-
-.btn-warning {
-  background-color: #f97316;
-  color: white;
-}
-
-.btn-success {
-  background-color: #10b981;
-  color: white;
-}
-
-.btn-purple {
-  background-color: #7c3aed;
+  background: var(--accent-crimson);
   color: white;
 }
 
 .btn-primary {
-  background-color: #3b82f6;
+  background: var(--accent-blue);
   color: white;
 }
 
 .btn-secondary {
-  background-color: #334155;
+  background: rgba(255, 255, 255, 0.08);
   color: #f1f5f9;
-  border: 1px solid #475569;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .btn-secondary:hover {
-  background-color: #475569;
-  border-color: #64748b;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Estilos de Input Modernos y Planos */
+/* Inputs con micro-iluminación al focus */
 input, select, textarea {
   font-family: 'Outfit', sans-serif;
   transition: all 0.2s ease;
-  background-color: #1e293b !important;
-  color: #f8fafc !important;
-  border: 1px solid #334155 !important;
+  background-color: rgba(24, 24, 27, 0.8) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border) !important;
   border-radius: 8px;
+  padding: 10px 14px;
 }
 
-input::placeholder {
-  color: #64748b;
+input::placeholder, textarea::placeholder {
+  color: var(--text-secondary);
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: #3b82f6 !important;
-  background-color: #0f172a !important;
-  box-shadow: none !important;
+  border-color: rgba(255,255,255,0.3) !important;
+  background-color: rgba(39, 39, 42, 0.9) !important;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.05) !important;
 }
 
-/* Efectos Simplificados de Paneles (Sin degradados pesados ni neón) */
-.glass-header {
-  background-color: #0f172a;
-  border-bottom: 1px solid #334155;
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px top 50% !important;
+  background-size: 10px auto !important;
+  padding-right: 30px;
 }
 
-.glass-card {
-  background-color: #1e293b;
-  border: 1px solid #334155;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
-  border-radius: 12px;
+/* Marcadores de mapa Leaflet */
+.custom-leaflet-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.pin-marker {
+  width: 26px;
+  height: 26px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pin-marker:hover {
+  transform: rotate(-45deg) scale(1.22);
+}
+
+.pin-marker svg {
+  transform: rotate(45deg);
+}
+
+/* Popups Leaflet Rediseñados */
+.leaflet-popup-content-wrapper {
+  background: rgba(24, 24, 27, 0.98) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7) !important;
+  color: #f8fafc !important;
+  padding: 6px !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(24, 24, 27, 0.98) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  font-family: 'Outfit', sans-serif !important;
 }
 
 /* Animaciones */
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-modal {
+  animation: modalSlideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -164,3 +268,18 @@ input:focus, select:focus, textarea:focus {
   animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Scrollbar estilizada */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

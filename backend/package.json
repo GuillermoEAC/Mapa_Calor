@@ -22,5 +22,8 @@
     "nodemailer": "^8.0.7",
     "pino": "^10.3.1",
     "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }
