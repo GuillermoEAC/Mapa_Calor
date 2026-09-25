@@ -21,11 +21,30 @@ const {
 
 const app = express();
 
-// ── Seguridad ──
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+const frontendUrlLimpia = (process.env.FRONTEND_URL || "").trim().replace(/\/$/, "");
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: function (origin, callback) {
+    // Permitir peticiones sin origin (como apps móviles, curl, o health checks)
+    if (!origin) return callback(null, true);
+
+    // Permitir localhost, la URL de producción configurada (limpiando slash final), o cualquier URL de Vercel
+    if (
+      origin === "http://localhost:5173" ||
+      origin === "http://localhost:3000" ||
+      (frontendUrlLimpia && origin === frontendUrlLimpia) ||
+      origin.endsWith(".vercel.app")
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Bloqueado por CORS: ${origin}`));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 }));
 
