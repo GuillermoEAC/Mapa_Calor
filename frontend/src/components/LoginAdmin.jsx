@@ -102,11 +102,11 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
             <label
               style={{ fontWeight: "600", fontSize: "13px", color: "#cbd5e1", display: "block", marginBottom: "6px" }}
             >
-              Usuario o Correo
+              Usuario
             </label>
             <input
               type="text"
-              placeholder="admin@tuproyecto.com"
+              placeholder="admin"
               value={usuario}
               onChange={(e) => setUsuario(e.target.value)}
               style={{

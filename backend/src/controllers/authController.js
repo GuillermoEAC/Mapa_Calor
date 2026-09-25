@@ -13,9 +13,10 @@ const loginAdmin = async (req, res) => {
   }
 
   try {
+    const usuarioLimpio = usuario.trim();
     const [filas] = await pool.query(
       "SELECT * FROM Administrador WHERE correo = ?",
-      [usuario],
+      [usuarioLimpio],
     );
 
     if (filas.length === 0) {
@@ -23,7 +24,29 @@ const loginAdmin = async (req, res) => {
     }
 
     const admin = filas[0];
-    const contrasenaValida = await bcrypt.compare(password, admin.contrasena);
+
+    // 1. Intentar validar con bcrypt
+    let contrasenaValida = false;
+    try {
+      if (admin.contrasena && admin.contrasena.startsWith("$2b$")) {
+        contrasenaValida = await bcrypt.compare(password, admin.contrasena);
+      }
+    } catch (e) {
+      contrasenaValida = false;
+    }
+
+    // 2. Compatibilidad hacia atrás: si la contraseña en BD sigue en texto plano
+    if (!contrasenaValida && admin.contrasena === password) {
+      contrasenaValida = true;
+      // Auto-migrar inmediatamente a bcrypt en la base de datos
+      try {
+        const nuevoHash = await bcrypt.hash(password, 12);
+        await pool.query("UPDATE Administrador SET contrasena = ? WHERE id_admin = ?", [nuevoHash, admin.id_admin]);
+        console.log(`[AUTH] Contraseña de ${admin.correo} migrada automáticamente a bcrypt`);
+      } catch (errMigrate) {
+        console.error("[AUTH] Error auto-migrando contraseña a hash:", errMigrate);
+      }
+    }
 
     if (!contrasenaValida) {
       return res.status(401).json({ success: false, error: "Usuario o contraseña incorrectos" });

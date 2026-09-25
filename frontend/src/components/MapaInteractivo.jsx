@@ -23,7 +23,7 @@ const ESTILOS_MAPA = {
   },
   oscuro: {
     nombre: "Modo Oscuro",
-    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   },
   google_maps: {
     nombre: "Mapa de Calles",
@@ -704,6 +704,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         maxBounds={MAX_BOUNDS}
         maxBoundsViscosity={1.0}
         style={{ height: "100%", width: "100%" }}
+        className={estiloMapaActivo === "oscuro" ? "mapa-modo-oscuro" : ""}
         preferCanvas={true}
         zoomControl={false}
       >

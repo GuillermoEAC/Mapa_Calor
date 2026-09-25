@@ -283,3 +283,15 @@ select {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   MODO OSCURO PARA TILES DEL MAPA (Sin marcas de agua ni API Key)
+   ───────────────────────────────────────────────────────────── */
+.mapa-modo-oscuro .leaflet-tile-pane {
+  filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(90%);
+}
+
+.mapa-modo-oscuro .leaflet-container {
+  background: #18181b !important;
+}
+
