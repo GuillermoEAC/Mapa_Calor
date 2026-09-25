@@ -74,7 +74,7 @@ const HistoricoReportes = ({ token }) => {
             <span>Histórico de Reportes Depurados</span>
           </h2>
           <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
-            Archivo histórico de incidentes archivados (>30 días de antigüedad).
+            Archivo histórico de incidentes archivados (más de 30 días de antigüedad).
           </p>
         </div>
 
