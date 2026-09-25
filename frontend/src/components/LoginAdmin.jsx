@@ -29,7 +29,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
         setError(datos.error || "Credenciales incorrectas");
       }
     } catch (err) {
-      setError("No se pudo conectar con el servidor. Revisa tu conexión.");
+      setError("No se pudo conectar con el servidor.");
     } finally {
       setCargando(false);
     }
@@ -45,115 +45,88 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
         justifyContent: "center",
         backgroundColor: "#09090b",
         padding: "20px",
-        position: "relative",
-        overflow: "hidden",
       }}
     >
-      {/* Resplandor decorativo de fondo */}
-      <div
-        style={{
-          position: "absolute",
-          top: "30%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "420px",
-          height: "420px",
-          background: "radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(99, 102, 241, 0.05) 50%, transparent 70%)",
-          pointerEvents: "none",
-          filter: "blur(60px)",
-        }}
-      />
-
       <div
         className="animate-modal"
         style={{
-          position: "relative",
-          zIndex: 10,
           width: "100%",
-          maxWidth: "410px",
-          background: "rgba(24, 24, 27, 0.92)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: "0 24px 60px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)",
-          borderRadius: "24px",
-          padding: "36px 32px",
-          backdropFilter: "blur(16px)",
+          maxWidth: "380px",
+          backgroundColor: "#121215",
+          border: "1px solid #27272a",
+          borderRadius: "18px",
+          padding: "32px 28px",
+          boxShadow: "0 20px 40px rgba(0, 0, 0, 0.6)",
         }}
       >
-        {/* Cabecera del Login */}
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
           <div
             style={{
-              width: "56px",
-              height: "56px",
-              margin: "0 auto 16px auto",
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)",
-              border: "1px solid rgba(56, 189, 248, 0.4)",
+              width: "48px",
+              height: "48px",
+              margin: "0 auto 14px auto",
+              borderRadius: "12px",
+              backgroundColor: "rgba(56, 189, 248, 0.12)",
+              border: "1px solid rgba(56, 189, 248, 0.25)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "#38bdf8",
-              boxShadow: "0 8px 24px -4px rgba(56, 189, 248, 0.3)",
             }}
           >
-            <ShieldCheck size={28} />
+            <ShieldCheck size={24} />
           </div>
           <h1
             style={{
               margin: 0,
-              fontSize: "22px",
-              fontWeight: 800,
-              letterSpacing: "-0.5px",
-              color: "#ffffff",
+              fontSize: "19px",
+              fontWeight: 700,
+              color: "#f4f4f5",
             }}
           >
-            Portal de Administración
+            Acceso Administrativo
           </h1>
           <p
             style={{
-              margin: "6px 0 0 0",
-              fontSize: "13px",
-              color: "#a1a1aa",
+              margin: "4px 0 0 0",
+              fontSize: "12.5px",
+              color: "#71717a",
             }}
           >
-            Control y moderación del Mapa de Inseguridad
+            Panel de control y moderación
           </p>
         </div>
 
-        {/* Mensaje de Error */}
         {error && (
           <div
             className="animate-fade-in"
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "10px",
-              backgroundColor: "rgba(244, 63, 94, 0.12)",
-              border: "1px solid rgba(244, 63, 94, 0.3)",
-              color: "#fda4af",
-              padding: "11px 14px",
-              borderRadius: "12px",
-              fontSize: "13px",
-              marginBottom: "20px",
+              gap: "8px",
+              backgroundColor: "rgba(244, 63, 94, 0.1)",
+              border: "1px solid rgba(244, 63, 94, 0.25)",
+              color: "#fb7185",
+              padding: "10px 12px",
+              borderRadius: "10px",
+              fontSize: "12.5px",
+              marginBottom: "16px",
             }}
           >
-            <AlertCircle size={18} style={{ flexShrink: 0, color: "#f43f5e" }} />
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Formulario */}
-        <form onSubmit={manejarEnvio} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-          {/* Campo Usuario */}
+        <form onSubmit={manejarEnvio} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div>
             <label
               style={{
                 display: "block",
-                fontSize: "12.5px",
+                fontSize: "12px",
                 fontWeight: 600,
-                color: "#e4e4e7",
-                marginBottom: "8px",
-                letterSpacing: "0.2px",
+                color: "#a1a1aa",
+                marginBottom: "6px",
               }}
             >
               Usuario
@@ -162,16 +135,14 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
               <div
                 style={{
                   position: "absolute",
-                  left: "14px",
+                  left: "12px",
                   top: "50%",
                   transform: "translateY(-50%)",
-                  color: "#71717a",
+                  color: "#52525b",
                   display: "flex",
-                  alignItems: "center",
-                  pointerEvents: "none",
                 }}
               >
-                <User size={17} />
+                <User size={16} />
               </div>
               <input
                 type="text"
@@ -182,26 +153,25 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                 required
                 style={{
                   width: "100%",
-                  padding: "12px 14px 12px 42px",
-                  fontSize: "14px",
-                  borderRadius: "12px",
-                  backgroundColor: "rgba(9, 9, 11, 0.6) !important",
-                  borderColor: "rgba(255, 255, 255, 0.1) !important",
+                  padding: "11px 12px 11px 38px",
+                  fontSize: "13.5px",
+                  borderRadius: "10px",
+                  backgroundColor: "#18181b",
+                  borderColor: "#27272a",
+                  color: "#f4f4f5",
                 }}
               />
             </div>
           </div>
 
-          {/* Campo Contraseña */}
           <div>
             <label
               style={{
                 display: "block",
-                fontSize: "12.5px",
+                fontSize: "12px",
                 fontWeight: 600,
-                color: "#e4e4e7",
-                marginBottom: "8px",
-                letterSpacing: "0.2px",
+                color: "#a1a1aa",
+                marginBottom: "6px",
               }}
             >
               Contraseña
@@ -210,16 +180,14 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
               <div
                 style={{
                   position: "absolute",
-                  left: "14px",
+                  left: "12px",
                   top: "50%",
                   transform: "translateY(-50%)",
-                  color: "#71717a",
+                  color: "#52525b",
                   display: "flex",
-                  alignItems: "center",
-                  pointerEvents: "none",
                 }}
               >
-                <Lock size={17} />
+                <Lock size={16} />
               </div>
               <input
                 type={mostrarPassword ? "text" : "password"}
@@ -229,11 +197,12 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                 required
                 style={{
                   width: "100%",
-                  padding: "12px 42px 12px 42px",
-                  fontSize: "14px",
-                  borderRadius: "12px",
-                  backgroundColor: "rgba(9, 9, 11, 0.6) !important",
-                  borderColor: "rgba(255, 255, 255, 0.1) !important",
+                  padding: "11px 38px 11px 38px",
+                  fontSize: "13.5px",
+                  borderRadius: "10px",
+                  backgroundColor: "#18181b",
+                  borderColor: "#27272a",
+                  color: "#f4f4f5",
                 }}
               />
               <button
@@ -241,104 +210,72 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                 onClick={() => setMostrarPassword(!mostrarPassword)}
                 style={{
                   position: "absolute",
-                  right: "12px",
+                  right: "10px",
                   top: "50%",
                   transform: "translateY(-50%)",
                   background: "transparent",
                   border: "none",
-                  color: "#a1a1aa",
+                  color: "#71717a",
                   cursor: "pointer",
                   display: "flex",
-                  alignItems: "center",
                   padding: "4px",
                 }}
-                title={mostrarPassword ? "Ocultar" : "Mostrar"}
               >
-                {mostrarPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                {mostrarPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
-          {/* Botón Iniciar Sesión */}
           <button
             type="submit"
             disabled={cargando}
             style={{
-              marginTop: "8px",
-              padding: "13px",
-              borderRadius: "12px",
-              background: "linear-gradient(135deg, #0284c7 0%, #2563eb 100%)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
+              marginTop: "6px",
+              padding: "11px",
+              borderRadius: "10px",
+              backgroundColor: "#2563eb",
+              border: "1px solid #3b82f6",
               color: "#ffffff",
-              fontSize: "14px",
-              fontWeight: 700,
+              fontSize: "13.5px",
+              fontWeight: 600,
               cursor: cargando ? "wait" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: "8px",
-              boxShadow: "0 10px 25px -4px rgba(37, 99, 235, 0.45)",
-              opacity: cargando ? 0.75 : 1,
+              opacity: cargando ? 0.7 : 1,
             }}
           >
             {cargando ? (
               <>
-                <Loader2 size={18} style={{ animation: "spin 0.8s linear infinite" }} />
-                <span>Verificando credenciales...</span>
+                <Loader2 size={16} style={{ animation: "spin 0.8s linear infinite" }} />
+                <span>Verificando...</span>
               </>
             ) : (
-              <span>Acceder al Panel</span>
+              <span>Entrar</span>
             )}
           </button>
 
-          {/* Volver al mapa */}
           <button
             type="button"
             onClick={onCancelar}
             style={{
-              padding: "10px",
-              borderRadius: "10px",
+              padding: "8px",
               background: "transparent",
               border: "none",
-              color: "#a1a1aa",
-              fontSize: "13px",
-              fontWeight: 500,
+              color: "#71717a",
+              fontSize: "12.5px",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: "6px",
-              marginTop: "4px",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#f4f4f5")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#a1a1aa")}
           >
-            <ArrowLeft size={15} />
-            <span>Volver al Mapa Ciudadano</span>
+            <ArrowLeft size={14} />
+            <span>Volver al mapa</span>
           </button>
         </form>
-
-        {/* Footer Seguridad */}
-        <div
-          style={{
-            marginTop: "24px",
-            paddingTop: "16px",
-            borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-            textAlign: "center",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "11px",
-              color: "#71717a",
-              letterSpacing: "0.4px",
-              textTransform: "uppercase",
-              fontWeight: 600,
-            }}
-          >
-            🔒 Sesión Protegida con Bcrypt & JWT
-          </span>
-        </div>
       </div>
     </div>
   );

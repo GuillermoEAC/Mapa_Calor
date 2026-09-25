@@ -268,11 +268,11 @@ const exportarReportes = async (req, res) => {
   const condiciones = [];
   const params = [];
 
-  if (estado) {
+  if (estado && estado !== "todos") {
     condiciones.push("r.estado = ?");
     params.push(estado);
   }
-  if (tipo) {
+  if (tipo && tipo !== "todos") {
     condiciones.push("r.id_tipo = ?");
     params.push(parseInt(tipo));
   }
@@ -294,19 +294,29 @@ const exportarReportes = async (req, res) => {
   try {
     const [reportes] = await pool.query(query, params);
 
-    // Encabezados para descarga CSV
-    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=reportes_export.csv");
 
-    // BOM para que Excel interprete UTF-8 correctamente
     let csv = "\uFEFF";
-    csv += "ID,Tipo Incidente,Descripcion,Estado,Latitud,Longitud,Fecha Registro\n";
+    csv += "sep=,\r\n";
+    csv += "ID,Tipo Incidente,Descripcion,Estado,Latitud,Longitud,Fecha Registro\r\n";
 
     for (const r of reportes) {
       const descripcion = r.descripcion 
-        ? r.descripcion.replace(/"/g, '""').replace(/\r?\n|\r/g, " ") 
-        : "";
-      csv += `${r.id_reporte},"${r.tipo_incidente}","${descripcion}",${r.estado},${r.latitud},${r.longitud},${r.fecha_registro}\n`;
+        ? `"${r.descripcion.replace(/"/g, '""').replace(/\r?\n|\r/g, " ")}"` 
+        : '""';
+      const tipoIncidente = `"${(r.tipo_incidente || "").replace(/"/g, '""')}"`;
+      
+      let fechaStr = "";
+      if (r.fecha_registro) {
+        const d = new Date(r.fecha_registro);
+        if (!isNaN(d.getTime())) {
+          const pad = (n) => String(n).padStart(2, "0");
+          fechaStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+      }
+
+      csv += `${r.id_reporte},${tipoIncidente},${descripcion},${r.estado},${r.latitud},${r.longitud},"${fechaStr}"\r\n`;
     }
 
     res.send(csv);

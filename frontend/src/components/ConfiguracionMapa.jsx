@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Settings, Save, RefreshCw, CheckCircle2, Sliders, Info, Eye } from "lucide-react";
+import { Settings, Save, RefreshCw, CheckCircle2 } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
 const ConfiguracionMapa = ({ token }) => {
@@ -23,7 +23,7 @@ const ConfiguracionMapa = ({ token }) => {
           opacidad: parseFloat(datos.opacidad_puntos) || 0.15,
         });
       } catch (error) {
-        console.error("Error al cargar configuración:", error);
+        console.error(error);
       }
     };
     cargarConfig();
@@ -42,21 +42,20 @@ const ConfiguracionMapa = ({ token }) => {
       });
 
       if (resp.ok) {
-        setMensajeExito("Parámetros guardados exitosamente. El mapa reflejará los cambios para todos los usuarios.");
-        setTimeout(() => setMensajeExito(""), 4500);
+        setMensajeExito("Parámetros guardados correctamente.");
+        setTimeout(() => setMensajeExito(""), 4000);
       } else {
-        setMensajeError("No se pudieron guardar los cambios. Verifica tus permisos de administrador.");
+        setMensajeError("No se pudieron guardar los cambios.");
       }
     } catch (error) {
-      setMensajeError("Error de conexión al guardar configuración.");
+      setMensajeError("Error de conexión al guardar.");
     } finally {
       setGuardando(false);
     }
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: "700px" }}>
-      {/* Título */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: "800px" }}>
       <div className="admin-card" style={{ padding: "20px 24px" }}>
         <h2
           style={{
@@ -70,14 +69,13 @@ const ConfiguracionMapa = ({ token }) => {
           }}
         >
           <Settings size={22} color="#38bdf8" />
-          <span>Configuración de Visualización del Mapa de Calor</span>
+          <span>Configuración del Mapa de Calor</span>
         </h2>
         <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
-          Ajusta los parámetros de densidad y dispersión del algoritmo de calor para la ciudad de Los Mochis.
+          Ajustes de cobertura e intensidad visual para los reportes ciudadanos.
         </p>
       </div>
 
-      {/* Alertas de Feedback */}
       {mensajeExito && (
         <div
           className="animate-fade-in"
@@ -85,15 +83,15 @@ const ConfiguracionMapa = ({ token }) => {
             display: "flex",
             alignItems: "center",
             gap: "10px",
-            backgroundColor: "rgba(16, 185, 129, 0.12)",
+            backgroundColor: "rgba(16, 185, 129, 0.1)",
             border: "1px solid rgba(16, 185, 129, 0.3)",
-            color: "#6ee7b7",
+            color: "#34d399",
             padding: "12px 16px",
-            borderRadius: "12px",
+            borderRadius: "10px",
             fontSize: "13px",
           }}
         >
-          <CheckCircle2 size={18} color="#10b981" />
+          <CheckCircle2 size={16} />
           <span>{mensajeExito}</span>
         </div>
       )}
@@ -102,11 +100,11 @@ const ConfiguracionMapa = ({ token }) => {
         <div
           className="animate-fade-in"
           style={{
-            backgroundColor: "rgba(244, 63, 94, 0.12)",
+            backgroundColor: "rgba(244, 63, 94, 0.1)",
             border: "1px solid rgba(244, 63, 94, 0.3)",
-            color: "#fda4af",
+            color: "#fb7185",
             padding: "12px 16px",
-            borderRadius: "12px",
+            borderRadius: "10px",
             fontSize: "13px",
           }}
         >
@@ -114,30 +112,28 @@ const ConfiguracionMapa = ({ token }) => {
         </div>
       )}
 
-      {/* Panel de Controles */}
-      <div className="admin-card" style={{ padding: "28px", display: "flex", flexDirection: "column", gap: "28px" }}>
-        {/* Control 1: Radio */}
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <label style={{ fontSize: "14px", fontWeight: 600, color: "#f4f4f5" }}>
-              Radio de Influencia Geográfica
-            </label>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
+        <div className="admin-card" style={{ padding: "22px", display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "#f4f4f5" }}>
+              Radio de Influencia
+            </span>
             <span
               style={{
                 fontSize: "13px",
                 fontWeight: 700,
                 color: "#38bdf8",
-                background: "rgba(56, 189, 248, 0.1)",
-                border: "1px solid rgba(56, 189, 248, 0.25)",
-                padding: "3px 10px",
-                borderRadius: "8px",
+                backgroundColor: "rgba(56, 189, 248, 0.1)",
+                padding: "2px 8px",
+                borderRadius: "6px",
+                border: "1px solid rgba(56, 189, 248, 0.2)",
               }}
             >
-              {config.radio} metros
+              {config.radio} m
             </span>
           </div>
-          <p style={{ margin: "0 0 14px 0", fontSize: "12px", color: "#a1a1aa" }}>
-            Define qué tan amplio es el círculo de impacto alrededor de cada reporte en el mapa.
+          <p style={{ margin: 0, fontSize: "12px", color: "#71717a" }}>
+            Tamaño de la huella térmica generada por cada incidente reportado.
           </p>
           <input
             type="range"
@@ -149,28 +145,27 @@ const ConfiguracionMapa = ({ token }) => {
           />
         </div>
 
-        {/* Control 2: Opacidad / Intensidad */}
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <label style={{ fontSize: "14px", fontWeight: 600, color: "#f4f4f5" }}>
-              Intensidad y Opacidad de Capa
-            </label>
+        <div className="admin-card" style={{ padding: "22px", display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "#f4f4f5" }}>
+              Opacidad de Capa
+            </span>
             <span
               style={{
                 fontSize: "13px",
                 fontWeight: 700,
                 color: "#38bdf8",
-                background: "rgba(56, 189, 248, 0.1)",
-                border: "1px solid rgba(56, 189, 248, 0.25)",
-                padding: "3px 10px",
-                borderRadius: "8px",
+                backgroundColor: "rgba(56, 189, 248, 0.1)",
+                padding: "2px 8px",
+                borderRadius: "6px",
+                border: "1px solid rgba(56, 189, 248, 0.2)",
               }}
             >
               {(config.opacidad * 100).toFixed(0)}%
             </span>
           </div>
-          <p style={{ margin: "0 0 14px 0", fontSize: "12px", color: "#a1a1aa" }}>
-            Controla la visibilidad y brillo del mapa de calor sobre las calles y satélite.
+          <p style={{ margin: 0, fontSize: "12px", color: "#71717a" }}>
+            Nivel de transparencia del mapa de calor sobre las calles.
           </p>
           <input
             type="range"
@@ -181,40 +176,39 @@ const ConfiguracionMapa = ({ token }) => {
             onChange={(e) => setConfig({ ...config, opacidad: parseFloat(e.target.value) })}
           />
         </div>
+      </div>
 
-        {/* Botón Guardar */}
-        <div style={{ paddingTop: "10px", borderTop: "1px solid rgba(255, 255, 255, 0.06)" }}>
-          <button
-            onClick={manejarGuardar}
-            disabled={guardando}
-            style={{
-              padding: "12px 24px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, #0284c7 0%, #2563eb 100%)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              color: "#ffffff",
-              fontSize: "13.5px",
-              fontWeight: 600,
-              cursor: guardando ? "wait" : "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              boxShadow: "0 8px 20px -4px rgba(37, 99, 235, 0.4)",
-            }}
-          >
-            {guardando ? (
-              <>
-                <RefreshCw size={16} style={{ animation: "spin 0.8s linear infinite" }} />
-                <span>Guardando cambios...</span>
-              </>
-            ) : (
-              <>
-                <Save size={16} />
-                <span>Guardar Parámetros</span>
-              </>
-            )}
-          </button>
-        </div>
+      <div>
+        <button
+          onClick={manejarGuardar}
+          disabled={guardando}
+          style={{
+            padding: "10px 20px",
+            borderRadius: "10px",
+            backgroundColor: "#2563eb",
+            border: "1px solid #3b82f6",
+            color: "#ffffff",
+            fontSize: "13.5px",
+            fontWeight: 600,
+            cursor: guardando ? "wait" : "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            opacity: guardando ? 0.7 : 1,
+          }}
+        >
+          {guardando ? (
+            <>
+              <RefreshCw size={15} style={{ animation: "spin 0.8s linear infinite" }} />
+              <span>Guardando...</span>
+            </>
+          ) : (
+            <>
+              <Save size={15} />
+              <span>Guardar Configuración</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

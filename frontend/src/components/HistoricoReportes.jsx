@@ -21,9 +21,15 @@ const HistoricoReportes = ({ token }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const datos = await respuesta.json();
-      setReportes(Array.isArray(datos) ? datos : []);
+      const lista = Array.isArray(datos)
+        ? datos
+        : Array.isArray(datos?.reportes)
+        ? datos.reportes
+        : [];
+      setReportes(lista);
     } catch (error) {
-      console.error("Error cargando histórico:", error);
+      console.error(error);
+      setReportes([]);
     } finally {
       setLoading(false);
     }
@@ -34,9 +40,10 @@ const HistoricoReportes = ({ token }) => {
   }, []);
 
   const reportesFiltrados = useMemo(() => {
-    if (!busqueda.trim()) return reportes;
+    const lista = Array.isArray(reportes) ? reportes : [];
+    if (!busqueda.trim()) return lista;
     const q = busqueda.toLowerCase();
-    return reportes.filter(
+    return lista.filter(
       (r) =>
         (r.descripcion && r.descripcion.toLowerCase().includes(q)) ||
         (r.tipo_incidente && r.tipo_incidente.toLowerCase().includes(q)) ||
@@ -46,7 +53,6 @@ const HistoricoReportes = ({ token }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      {/* Barra de título y búsqueda */}
       <div
         className="admin-card"
         style={{
@@ -71,15 +77,14 @@ const HistoricoReportes = ({ token }) => {
             }}
           >
             <History size={22} color="#38bdf8" />
-            <span>Histórico de Reportes Depurados</span>
+            <span>Histórico de Reportes</span>
           </h2>
           <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
-            Archivo histórico de incidentes archivados (más de 30 días de antigüedad).
+            Registros archivados con más de 30 días de antigüedad.
           </p>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          {/* Input de Búsqueda */}
           <div style={{ position: "relative" }}>
             <div
               style={{
@@ -133,7 +138,6 @@ const HistoricoReportes = ({ token }) => {
         </div>
       </div>
 
-      {/* Contenido */}
       {loading ? (
         <div className="admin-card" style={{ padding: "60px 20px", textAlign: "center", color: "#a1a1aa" }}>
           <div
@@ -147,16 +151,16 @@ const HistoricoReportes = ({ token }) => {
               margin: "0 auto 14px auto",
             }}
           />
-          <span style={{ fontSize: "14px" }}>Cargando registros históricos...</span>
+          <span style={{ fontSize: "14px" }}>Cargando registros...</span>
         </div>
       ) : reportesFiltrados.length === 0 ? (
         <div className="admin-card" style={{ padding: "50px 20px", textAlign: "center", color: "#a1a1aa" }}>
           <History size={36} color="#52525b" style={{ margin: "0 auto 12px auto" }} />
           <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: "#f4f4f5" }}>
-            {busqueda ? "No se encontraron coincidencias" : "No hay reportes en el historial"}
+            {busqueda ? "Sin coincidencias" : "No hay reportes archivados"}
           </h3>
           <p style={{ margin: "6px 0 0 0", fontSize: "12.5px", color: "#71717a" }}>
-            {busqueda ? "Intenta con otro término de búsqueda" : "Los reportes archivados aparecerán aquí automáticamente."}
+            {busqueda ? "Intenta con otro término." : "Los incidentes con más de 30 días aparecerán aquí."}
           </p>
         </div>
       ) : (
@@ -166,9 +170,9 @@ const HistoricoReportes = ({ token }) => {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Tipo de Incidente</th>
+                  <th>Tipo</th>
                   <th>Descripción</th>
-                  <th>Fecha de Registro</th>
+                  <th>Fecha</th>
                   <th>Ubicación</th>
                 </tr>
               </thead>
@@ -200,7 +204,7 @@ const HistoricoReportes = ({ token }) => {
                       <td style={{ maxWidth: "320px" }}>
                         {rep.descripcion ? (
                           <span style={{ color: "#e4e4e7", fontSize: "13px" }}>
-                            "{rep.descripcion}"
+                            {rep.descripcion}
                           </span>
                         ) : (
                           <span style={{ color: "#71717a", fontSize: "12px", fontStyle: "italic" }}>
