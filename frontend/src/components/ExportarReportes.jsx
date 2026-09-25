@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Download, Filter, CheckCircle2, FileSpreadsheet, AlertCircle, Loader2 } from "lucide-react";
+import { Download, Filter, CheckCircle2, FileSpreadsheet, AlertCircle, Loader2, Info } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
 const ExportarReportes = ({ token }) => {
@@ -52,7 +52,7 @@ const ExportarReportes = ({ token }) => {
   };
 
   return (
-    <div style={{ maxWidth: "760px", display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div style={{ maxWidth: "760px", display: "flex", flexDirection: "column", gap: "20px", margin: "0 auto", width: "100%" }}>
       <div className="admin-card" style={{ padding: "20px 24px" }}>
         <h2
           style={{
@@ -242,6 +242,16 @@ const ExportarReportes = ({ token }) => {
               </>
             )}
           </button>
+        </div>
+      </div>
+
+      <div className="admin-card" style={{ padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start", backgroundColor: "rgba(56, 189, 248, 0.05)", border: "1px solid rgba(56, 189, 248, 0.15)" }}>
+        <Info size={20} color="#38bdf8" style={{ marginTop: "2px", flexShrink: 0 }} />
+        <div>
+          <h4 style={{ margin: "0 0 4px 0", color: "#f4f4f5", fontSize: "14px", fontWeight: 600 }}>Información sobre la Exportación</h4>
+          <p style={{ margin: 0, color: "#a1a1aa", fontSize: "13px", lineHeight: "1.5" }}>
+            El archivo CSV generado está optimizado para su apertura directa en Microsoft Excel y otras hojas de cálculo. Todos los datos sensibles o personales son procesados bajo las normativas de privacidad antes de su descarga.
+          </p>
         </div>
       </div>
     </div>

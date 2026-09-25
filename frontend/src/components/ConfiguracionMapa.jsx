@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Settings, Save, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Settings, Save, RefreshCw, CheckCircle2, Info } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
 const ConfiguracionMapa = ({ token }) => {
@@ -55,7 +55,7 @@ const ConfiguracionMapa = ({ token }) => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: "800px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: "800px", margin: "0 auto", width: "100%" }}>
       <div className="admin-card" style={{ padding: "20px 24px" }}>
         <h2
           style={{
@@ -209,6 +209,16 @@ const ConfiguracionMapa = ({ token }) => {
             </>
           )}
         </button>
+      </div>
+
+      <div className="admin-card" style={{ padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start", backgroundColor: "rgba(56, 189, 248, 0.05)", border: "1px solid rgba(56, 189, 248, 0.15)" }}>
+        <Info size={20} color="#38bdf8" style={{ marginTop: "2px", flexShrink: 0 }} />
+        <div>
+          <h4 style={{ margin: "0 0 4px 0", color: "#f4f4f5", fontSize: "14px", fontWeight: 600 }}>Aplicación en Tiempo Real</h4>
+          <p style={{ margin: 0, color: "#a1a1aa", fontSize: "13px", lineHeight: "1.5" }}>
+            Los cambios realizados en el radio de influencia y opacidad se reflejarán instantáneamente en el mapa público. Te recomendamos realizar ajustes moderados para mantener la legibilidad de las calles y reportes individuales.
+          </p>
+        </div>
       </div>
     </div>
   );
