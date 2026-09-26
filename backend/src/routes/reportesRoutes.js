@@ -8,6 +8,7 @@ const {
   insertarDatosPrueba,
   obtenerEstadisticas,
   obtenerHistorico,
+  obtenerDetalle,
   exportarReportes,
   depurarReportesAntiguos,
 } = require("../controllers/reportesController");
@@ -32,6 +33,7 @@ const verificarCronSecret = (req, res, next) => {
 // ── Rutas públicas ──
 router.post("/", limiteReportes, crearReporte);
 router.get("/aprobados", obtenerAprobados);
+router.get("/detalle/:id", obtenerDetalle);
 
 // ── Ruta de depuración automática (cron externo / cron-job.org / GET o POST) ──
 router.get("/depurar", verificarCronSecret, depurarReportesAntiguos);

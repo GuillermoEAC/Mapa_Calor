@@ -215,14 +215,28 @@ const ICONOS_CACHE = {
 // ─────────────────────────────────────────────────────────────────────────────
 const IncidenteMarker = memo(({ punto }) => {
   const infoTipo = TIPOS_INCIDENTES[punto.tipo] || { color: "#8b5cf6", nombre: "Desconocido" };
+  const [descripcion, setDescripcion] = useState(null);
+  const [cargandoDesc, setCargandoDesc] = useState(false);
   
   // Usar el icono pre-generado desde la caché (O(1) memoria en lugar de O(N))
   const customIcon = ICONOS_CACHE[punto.tipo] || ICONOS_CACHE[1];
+
+  // Cargar descripción bajo demanda al abrir el popup
+  const cargarDescripcion = useCallback(() => {
+    if (descripcion !== null || cargandoDesc || !punto.id) return;
+    setCargandoDesc(true);
+    fetch(`${API_BASE_URL}/api/reportes/detalle/${punto.id}`)
+      .then(r => r.json())
+      .then(data => setDescripcion(data.descripcion || ""))
+      .catch(() => setDescripcion(""))
+      .finally(() => setCargandoDesc(false));
+  }, [punto.id, descripcion, cargandoDesc]);
 
   return (
     <Marker
       position={[punto.lat, punto.lng]}
       icon={customIcon}
+      eventHandlers={{ popupopen: cargarDescripcion }}
     >
       <Popup>
         <div style={{ minWidth: "220px", fontFamily: "Outfit, sans-serif", padding: "2px" }}>
@@ -250,8 +264,12 @@ const IncidenteMarker = memo(({ punto }) => {
           
           <div style={{ width: "100%", height: "1px", background: "linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)", margin: "12px 0" }}></div>
 
-          {/* Body con la descripción */}
-          {punto.descripcion ? (
+          {/* Body con la descripción (cargada bajo demanda) */}
+          {cargandoDesc ? (
+            <div style={{ padding: "10px", textAlign: "center" }}>
+              <span style={{ fontSize: "12px", color: "#94a3b8" }}>Cargando...</span>
+            </div>
+          ) : descripcion ? (
             <div style={{
               background: "rgba(15, 23, 42, 0.4)",
               border: "1px solid rgba(255,255,255,0.05)",
@@ -268,7 +286,7 @@ const IncidenteMarker = memo(({ punto }) => {
                 zIndex: 1,
                 fontStyle: "italic"
               }}>
-                "{punto.descripcion}"
+                "{descripcion}"
               </p>
             </div>
           ) : (
@@ -292,7 +310,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   const [estiloMapaActivo, setEstiloMapaActivo] = useState("google_hibrido");
 
   const [drawerAbierto, setDrawerAbierto] = useState(false);
-  const [filtroTiempo, setFiltroTiempo] = useState("todos"); // '24h' | '7d' | '30d' | 'todos'
+  const [filtroTiempo, setFiltroTiempo] = useState("anio"); // 'anio' | '24h' | '7d' | '30d'
 
   const [miUbicacionActual, setMiUbicacionActual] = useState(null);
   const mapRef = useRef(null);
@@ -383,10 +401,10 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
           const lng = parseFloat(p.longitud);
           if (!isNaN(lat) && !isNaN(lng)) {
             validos.push({
+              id: p.id_reporte,
               lat,
               lng,
               tipo: p.id_tipo,
-              descripcion: p.descripcion,
               fecha: p.fecha_registro,
             });
           }
@@ -404,16 +422,22 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   // ── Puntos filtrados por categoría y por tiempo (memoizado) ──
   const puntosFiltrados = useMemo(() => {
     const ahora = Date.now();
+    // Calcular inicio y fin del año en curso
+    const anioActual = new Date().getFullYear();
+    const inicioAnio = new Date(anioActual, 0, 1).getTime(); // 1 de Enero
+    const finAnio = new Date(anioActual, 11, 31, 23, 59, 59).getTime(); // 31 de Diciembre
+
     return puntosRaw.filter((p) => {
       // 1. Filtro por categoría de incidente
       if (!filtrosActivos.has(p.tipo.toString())) return false;
 
       // 2. Filtro por rango temporal
-      if (filtroTiempo === "todos") return true;
       if (!p.fecha) return true;
 
       const tiempoPunto = new Date(p.fecha).getTime();
       if (isNaN(tiempoPunto)) return true;
+
+      if (filtroTiempo === "anio") return tiempoPunto >= inicioAnio && tiempoPunto <= finAnio;
 
       const diffHoras = (ahora - tiempoPunto) / (1000 * 60 * 60);
       if (filtroTiempo === "24h") return diffHoras <= 24;
@@ -439,16 +463,22 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   const conteoPorTipo = useMemo(() => {
     const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
     const ahora = Date.now();
+    const anioActual = new Date().getFullYear();
+    const inicioAnio = new Date(anioActual, 0, 1).getTime();
+    const finAnio = new Date(anioActual, 11, 31, 23, 59, 59).getTime();
 
     puntosRaw.forEach((p) => {
       let cumpleTiempo = true;
-      if (filtroTiempo !== "todos" && p.fecha) {
+      if (p.fecha) {
         const tiempoPunto = new Date(p.fecha).getTime();
         if (!isNaN(tiempoPunto)) {
-          const diffHoras = (ahora - tiempoPunto) / (1000 * 60 * 60);
-          if (filtroTiempo === "24h") cumpleTiempo = diffHoras <= 24;
-          else if (filtroTiempo === "7d") cumpleTiempo = diffHoras <= 24 * 7;
-          else if (filtroTiempo === "30d") cumpleTiempo = diffHoras <= 24 * 30;
+          if (filtroTiempo === "anio") cumpleTiempo = tiempoPunto >= inicioAnio && tiempoPunto <= finAnio;
+          else {
+            const diffHoras = (ahora - tiempoPunto) / (1000 * 60 * 60);
+            if (filtroTiempo === "24h") cumpleTiempo = diffHoras <= 24;
+            else if (filtroTiempo === "7d") cumpleTiempo = diffHoras <= 24 * 7;
+            else if (filtroTiempo === "30d") cumpleTiempo = diffHoras <= 24 * 30;
+          }
         }
       }
 
@@ -462,7 +492,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   const todosActivos = filtrosActivos.size === 9;
 
   const textoTiempo = {
-    todos: "",
+    anio: ` (${new Date().getFullYear()})`,
     "30d": " (últimos 30 días)",
     "7d": " (últimos 7 días)",
     "24h": " (últimas 24h)",
@@ -659,9 +689,9 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                 <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa", display: "flex", alignItems: "center", gap: "6px" }}>
                   <Calendar size={13} color="#38bdf8" /> Rango Temporal
                 </span>
-                {filtroTiempo !== "todos" && (
+                {filtroTiempo !== "anio" && (
                   <button
-                    onClick={() => setFiltroTiempo("todos")}
+                    onClick={() => setFiltroTiempo("anio")}
                     style={{
                       background: "transparent",
                       border: "none",
@@ -679,7 +709,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 {[
-                  { id: "todos", label: "Histórico Todo", sub: "Todos los registros" },
+                  { id: "anio", label: `Año ${new Date().getFullYear()}`, sub: "01 Ene — 31 Dic" },
                   { id: "30d", label: "Último Mes", sub: "30 días" },
                   { id: "7d", label: "Última Semana", sub: "7 días" },
                   { id: "24h", label: "Hoy", sub: "Últimas 24 horas" },

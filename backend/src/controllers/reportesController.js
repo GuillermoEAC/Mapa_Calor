@@ -121,10 +121,14 @@ const actualizarEstado = async (req, res) => {
 
 const obtenerAprobados = async (req, res) => {
   try {
+    // Solo campos necesarios para el mapa de calor (sin descripcion para ahorrar bytes)
+    // LIMIT 500 como seguro: la depuración automática ya mantiene ~30 días de datos
     const [reportes] = await pool.query(`
-      SELECT latitud, longitud, id_tipo, descripcion, fecha_registro
+      SELECT id_reporte, latitud, longitud, id_tipo, fecha_registro
       FROM Reporte
       WHERE estado = 'APROBADO'
+      ORDER BY fecha_registro DESC
+      LIMIT 500
     `);
 
     // Cache header: los datos aprobados pueden cachearse 2 min
@@ -247,6 +251,7 @@ const obtenerHistorico = async (req, res) => {
   const offset = (page - 1) * limit;
 
   try {
+    // El admin ve TODO el histórico sin restricción temporal
     const [reportes] = await pool.query(`
       SELECT r.id_reporte, r.latitud, r.longitud, r.fecha_registro, r.descripcion, t.nombre AS tipo_incidente
       FROM Reporte r
@@ -263,6 +268,28 @@ const obtenerHistorico = async (req, res) => {
     res.json({ total, page, limit, totalPages: Math.ceil(total / limit), reportes });
   } catch (error) {
     res.status(500).json({ error: "Error al obtener el historial" });
+  }
+};
+
+// Obtener detalle de un reporte individual (descripción bajo demanda)
+const obtenerDetalle = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [reportes] = await pool.query(`
+      SELECT r.descripcion, t.nombre AS tipo_incidente
+      FROM Reporte r
+      JOIN Tipo_Incidente t ON r.id_tipo = t.id_tipo
+      WHERE r.id_reporte = ? AND r.estado = 'APROBADO'
+    `, [id]);
+
+    if (reportes.length === 0) {
+      return res.status(404).json({ error: "Reporte no encontrado" });
+    }
+
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(reportes[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener el detalle del reporte" });
   }
 };
 
@@ -345,5 +372,6 @@ module.exports = {
   obtenerEstadisticas,
   depurarReportesAntiguos,
   obtenerHistorico,
+  obtenerDetalle,
   exportarReportes,
 };
