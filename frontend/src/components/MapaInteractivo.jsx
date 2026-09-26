@@ -14,6 +14,11 @@ const TIPOS_INCIDENTES = {
   2: { nombre: "Vandalismo", color: "#f97316" },
   3: { nombre: "Fallo de Alumbrado", color: "#eab308" },
   4: { nombre: "Actividad Sospechosa", color: "#8b5cf6" },
+  5: { nombre: "Acoso / Zona Insegura", color: "#ec4899" },
+  6: { nombre: "Fuga de Agua", color: "#0ea5e9" },
+  7: { nombre: "Accidente Vehicular", color: "#06b6d4" },
+  8: { nombre: "Incendio / Quema", color: "#ea580c" },
+  9: { nombre: "Fuga de Gas", color: "#fde047" },
 };
 
 const ESTILOS_MAPA = {
@@ -40,13 +45,11 @@ const ESTILOS_MAPA = {
 };
 
 const HEAT_GRADIENT = {
-  0.0: "rgba(0, 0, 255, 0)",
-  0.2: "#3b82f6",
-  0.4: "#06b6d4",
-  0.5: "#22c55e",
-  0.7: "#eab308",
-  0.85: "#f97316",
-  1.0: "#ef4444",
+  0.2: "rgba(234, 179, 8, 0)",   // Transparente (Baja densidad)
+  0.4: "#eab308",                // Amarillo (Densidad media-baja)
+  0.6: "#f97316",                // Naranja (Densidad media)
+  0.8: "#ef4444",                // Rojo (Densidad alta)
+  1.0: "#7f1d1d",                // Rojo oscuro (Concentración máxima)
 };
 
 const CENTRO_LOS_MOCHIS = [25.7904, -108.9858];
@@ -161,8 +164,18 @@ const crearIconoPersonalizado = (color, tipo) => {
     svgIcon = `<path d="M22.7 19l-9.1-9.1c.9-2.1.4-4.7-1.5-6.6-2-2-5.1-2.4-7.5-1.2L9 6.5 6.5 9 2.1 4.6C.9 7 1.3 10.1 3.3 12.1c1.9 1.9 4.5 2.4 6.6 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.4-.4.4-1.1 0-1.4z" fill="currentColor"/>`;
   } else if (tipo === 3) { // Alumbrado
     svgIcon = `<path d="M12 2C7.58 2 4 5.58 4 10c0 2.52 1.16 4.77 3 6.28V20c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-3.72c1.84-1.51 3-3.76 3-6.28 0-4.42-3.58-8-8-8zm1 16h-2v-1h2v1zm1.5-3.32c-.52.34-.84.93-.84 1.57v.75h-3.32v-.75c0-.64-.32-1.23-.84-1.57C8.17 13.9 7 12.08 7 10c0-2.76 2.24-5 5-5s5 2.24 5 5c0 2.08-1.17 3.9-2.5 4.68z" fill="currentColor"/>`;
-  } else { // Sospechoso
+  } else if (tipo === 4) { // Sospechoso
     svgIcon = `<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/>`;
+  } else if (tipo === 5) { // Acoso / Zona Insegura
+    svgIcon = `<path d="M12 2L1 21h22L12 2zm0 14h-2v-2h2v2zm0-4h-2V8h2v4z" fill="currentColor"/>`;
+  } else if (tipo === 6) { // Fuga de Agua
+    svgIcon = `<path d="M12 21c-4.97 0-9-4.03-9-9 0-4.17 2.84-7.67 6.69-8.69L12 2l2.31 1.31C18.16 4.33 21 7.83 21 12c0 4.97-4.03 9-9 9z" fill="currentColor"/>`;
+  } else if (tipo === 7) { // Accidente Vehicular
+    svgIcon = `<path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" fill="currentColor"/>`;
+  } else if (tipo === 8) { // Incendio / Quema
+    svgIcon = `<path d="M12 2c0 0-4 4.5-4 9.5 0 2.21 1.79 4 4 4s4-1.79 4-4c0-5-4-9.5-4-9.5zm0 11.5c-1.1 0-2-.9-2-2 0-1.66 1.5-3.5 2-4.5.5 1 2 2.84 2 4.5 0 1.1-.9 2-2 2z" fill="currentColor"/>`;
+  } else if (tipo === 9) { // Fuga de Gas
+    svgIcon = `<path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="currentColor"/>`;
   }
 
   const html = `
@@ -190,6 +203,11 @@ const ICONOS_CACHE = {
   2: crearIconoPersonalizado(TIPOS_INCIDENTES[2].color, 2),
   3: crearIconoPersonalizado(TIPOS_INCIDENTES[3].color, 3),
   4: crearIconoPersonalizado(TIPOS_INCIDENTES[4].color, 4),
+  5: crearIconoPersonalizado(TIPOS_INCIDENTES[5].color, 5),
+  6: crearIconoPersonalizado(TIPOS_INCIDENTES[6].color, 6),
+  7: crearIconoPersonalizado(TIPOS_INCIDENTES[7].color, 7),
+  8: crearIconoPersonalizado(TIPOS_INCIDENTES[8].color, 8),
+  9: crearIconoPersonalizado(TIPOS_INCIDENTES[9].color, 9),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -270,7 +288,7 @@ const IncidenteMarker = memo(({ punto }) => {
 const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => {
   const [puntosRaw, setPuntosRaw] = useState([]);
   // Filtros: Set con IDs de tipo activos. Inicia con todos activos.
-  const [filtrosActivos, setFiltrosActivos] = useState(new Set(["1", "2", "3", "4"]));
+  const [filtrosActivos, setFiltrosActivos] = useState(new Set(["1", "2", "3", "4", "5", "6", "7", "8", "9"]));
   const [estiloMapaActivo, setEstiloMapaActivo] = useState("google_hibrido");
 
   const [drawerAbierto, setDrawerAbierto] = useState(false);
@@ -325,8 +343,8 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   // ── Seleccionar/deseleccionar todos ──
   const toggleTodos = useCallback(() => {
     setFiltrosActivos((prev) => {
-      if (prev.size === 4) return new Set(); // Si todos activos, quitar todos
-      return new Set(["1", "2", "3", "4"]); // Si no, activar todos
+      if (prev.size === 9) return new Set(); // Si todos activos, quitar todos
+      return new Set(["1", "2", "3", "4", "5", "6", "7", "8", "9"]); // Si no, activar todos
     });
   }, []);
 
@@ -419,7 +437,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
 
   // Conteo en tiempo real según el filtro temporal activo
   const conteoPorTipo = useMemo(() => {
-    const counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
     const ahora = Date.now();
 
     puntosRaw.forEach((p) => {
@@ -441,7 +459,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     return counts;
   }, [puntosRaw, filtroTiempo]);
 
-  const todosActivos = filtrosActivos.size === 4;
+  const todosActivos = filtrosActivos.size === 9;
 
   const textoTiempo = {
     todos: "",
@@ -493,7 +511,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         }}
       >
         <SlidersHorizontal size={15} />
-        Filtros y Capas ({filtrosActivos.size}/4)
+        Filtros y Capas ({filtrosActivos.size}/9)
       </button>
 
       {/* ── Drawer Lateral Deslizante ── */}

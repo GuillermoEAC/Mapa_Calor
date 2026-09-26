@@ -146,6 +146,11 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
               <option value="vandalismo" style={{ background: "#18181b" }}>Vandalismo</option>
               <option value="alumbrado" style={{ background: "#18181b" }}>Fallo de Alumbrado</option>
               <option value="sospechoso" style={{ background: "#18181b" }}>Actividad Sospechosa</option>
+              <option value="acoso" style={{ background: "#18181b" }}>Acoso / Zona Insegura</option>
+              <option value="fuga_agua" style={{ background: "#18181b" }}>Fuga de Agua / Drenaje</option>
+              <option value="accidente" style={{ background: "#18181b" }}>Accidente Vehicular</option>
+              <option value="incendio" style={{ background: "#18181b" }}>Incendio / Quema de Maleza</option>
+              <option value="fuga_gas" style={{ background: "#18181b" }}>Fuga de Gas</option>
             </select>
           </div>
 

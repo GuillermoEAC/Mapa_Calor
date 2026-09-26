@@ -2,7 +2,17 @@ const pool = require("../config/db");
 const { verificarAlertasCercanas } = require("./suscripcionController");
 
 // Mapeo de tipos de incidentes (reemplaza la cadena de if-chains)
-const MAPA_TIPOS = { robo: 1, vandalismo: 2, alumbrado: 3, sospechoso: 4 };
+const MAPA_TIPOS = { 
+  robo: 1, 
+  vandalismo: 2, 
+  alumbrado: 3, 
+  sospechoso: 4,
+  acoso: 5,
+  fuga_agua: 6,
+  accidente: 7,
+  incendio: 8,
+  fuga_gas: 9
+};
 
 // Límites geográficos para Los Mochis y ejidos aledaños (~25km radio)
 const LIMITES = {
