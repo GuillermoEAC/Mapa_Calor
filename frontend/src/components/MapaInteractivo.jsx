@@ -207,30 +207,56 @@ const IncidenteMarker = memo(({ punto }) => {
       icon={customIcon}
     >
       <Popup>
-        <div style={{ minWidth: "180px", fontFamily: "Outfit, sans-serif", padding: "4px" }}>
-          <h4 style={{ margin: "0 0 5px 0", color: infoTipo.color, fontWeight: "700", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: infoTipo.color }}></span>
-            {infoTipo.nombre}
-          </h4>
-          <p style={{ margin: "0 0 10px 0", fontSize: "11px", color: "#64748b", fontWeight: "500" }}>
-            {new Date(punto.fecha).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
-          </p>
-          {punto.descripcion ? (
-            <p style={{ 
-              margin: 0, 
-              fontSize: "12.5px", 
-              color: "#cbd5e1", 
-              background: "rgba(255,255,255,0.03)", 
-              padding: "8px 10px", 
-              borderRadius: "8px", 
-              borderLeft: `3px solid ${infoTipo.color}`,
-              lineHeight: "1.4",
-              fontStyle: "italic"
+        <div style={{ minWidth: "220px", fontFamily: "Outfit, sans-serif", padding: "2px" }}>
+          {/* Header con el tipo y punto de color */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "4px" }}>
+            <div style={{ 
+              width: "32px", height: "32px", borderRadius: "8px", 
+              backgroundColor: `${infoTipo.color}15`, 
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: `1px solid ${infoTipo.color}40`,
+              flexShrink: 0,
+              marginTop: "2px"
             }}>
-              "{punto.descripcion}"
-            </p>
+              <span style={{ display: "block", width: "10px", height: "10px", borderRadius: "50%", backgroundColor: infoTipo.color, boxShadow: `0 0 10px ${infoTipo.color}80` }}></span>
+            </div>
+            <div>
+              <h4 style={{ margin: 0, color: "#f8fafc", fontWeight: "700", fontSize: "15px", letterSpacing: "-0.3px", lineHeight: "1.2" }}>
+                {infoTipo.nombre}
+              </h4>
+              <p style={{ margin: "4px 0 0 0", fontSize: "11.5px", color: "#94a3b8", fontWeight: "500" }}>
+                {new Date(punto.fecha).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })}
+              </p>
+            </div>
+          </div>
+          
+          <div style={{ width: "100%", height: "1px", background: "linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)", margin: "12px 0" }}></div>
+
+          {/* Body con la descripción */}
+          {punto.descripcion ? (
+            <div style={{
+              background: "rgba(15, 23, 42, 0.4)",
+              border: "1px solid rgba(255,255,255,0.05)",
+              borderRadius: "8px",
+              padding: "12px",
+              position: "relative"
+            }}>
+              <p style={{ 
+                margin: 0, 
+                fontSize: "13px", 
+                color: "#e2e8f0", 
+                lineHeight: "1.6",
+                position: "relative",
+                zIndex: 1,
+                fontStyle: "italic"
+              }}>
+                "{punto.descripcion}"
+              </p>
+            </div>
           ) : (
-            <p style={{ margin: 0, fontSize: "12px", color: "#64748b", fontStyle: "italic" }}>Sin descripción detallada.</p>
+            <div style={{ padding: "10px", background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
+              <p style={{ margin: 0, fontSize: "12px", color: "#64748b", fontStyle: "italic", textAlign: "center" }}>Sin descripción adicional</p>
+            </div>
           )}
         </div>
       </Popup>

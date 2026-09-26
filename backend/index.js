@@ -83,5 +83,11 @@ app.use("/api/suscripciones", suscripcionRoutes);
 // ── Manejador global de errores (DEBE ir al final) ──
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+// Solo iniciar el servidor si no estamos en un entorno Serverless como Vercel
+if (process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+}
+
+// Exportar app para que Vercel pueda procesarlo como Serverless Function
+module.exports = app;
