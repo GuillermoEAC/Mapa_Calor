@@ -15,7 +15,17 @@ import {
 import { BarChart3, PieChart as PieChartIcon, TrendingUp, AlertTriangle, Clock, Layers } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
-const COLORS = ["#ef4444", "#f97316", "#eab308", "#8b5cf6", "#06b6d4"];
+const COLORS = [
+  "#ef4444", // Rojo
+  "#f97316", // Naranja
+  "#eab308", // Amarillo
+  "#8b5cf6", // Morado
+  "#f472b6", // Rosa
+  "#38bdf8", // Azul claro
+  "#22d3ee", // Cian
+  "#f97316", // Naranja fuego
+  "#fef08a", // Amarillo brillante
+];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -45,11 +55,13 @@ const CustomTooltip = ({ active, payload, label }) => {
 const Estadisticas = ({ token }) => {
   const [datos, setDatos] = useState({ porTipo: [], porHora: [] });
   const [loading, setLoading] = useState(true);
+  const [rango, setRango] = useState("anio"); // dia | semana | mes | anio | todos
 
   useEffect(() => {
     const cargarEstadisticas = async () => {
+      setLoading(true);
       try {
-        const respuesta = await fetch(`${API_BASE_URL}/api/reportes/estadisticas`, {
+        const respuesta = await fetch(`${API_BASE_URL}/api/reportes/estadisticas?rango=${rango}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const resultado = await respuesta.json();
@@ -61,7 +73,7 @@ const Estadisticas = ({ token }) => {
       }
     };
     cargarEstadisticas();
-  }, [token]);
+  }, [token, rango]);
 
   // Cálculos de métricas rápidas (KPIs)
   const metricas = useMemo(() => {
@@ -106,24 +118,46 @@ const Estadisticas = ({ token }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
       {/* Título */}
-      <div className="admin-card" style={{ padding: "20px 24px" }}>
-        <h2
+      <div className="admin-card" style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <div>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "18px",
+              fontWeight: 700,
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <BarChart3 size={22} color="#38bdf8" />
+            <span>Inteligencia y Análisis de Inseguridad</span>
+          </h2>
+          <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
+            Métricas consolidadas de patrones delictivos y horarios de mayor riesgo en Los Mochis.
+          </p>
+        </div>
+        <select
+          value={rango}
+          onChange={(e) => setRango(e.target.value)}
           style={{
-            margin: 0,
-            fontSize: "18px",
-            fontWeight: 700,
-            color: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
+            padding: "8px 14px",
+            fontSize: "13px",
+            borderRadius: "10px",
+            backgroundColor: "rgba(24, 24, 27, 0.8)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+            color: "#f4f4f5",
+            outline: "none",
+            cursor: "pointer",
           }}
         >
-          <BarChart3 size={22} color="#38bdf8" />
-          <span>Inteligencia y Análisis de Inseguridad</span>
-        </h2>
-        <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
-          Métricas consolidadas de patrones delictivos y horarios de mayor riesgo en Los Mochis.
-        </p>
+          <option value="todos">Histórico Total</option>
+          <option value="anio">Este Año</option>
+          <option value="mes">Último Mes</option>
+          <option value="semana">Última Semana</option>
+          <option value="dia">Hoy (24h)</option>
+        </select>
       </div>
 
       {/* KPI Cards */}

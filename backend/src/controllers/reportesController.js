@@ -189,20 +189,35 @@ const insertarDatosPrueba = async (req, res) => {
 };
 
 const obtenerEstadisticas = async (req, res) => {
+  const { rango } = req.query;
+  
+  let filtroFecha = "";
+  if (rango === "dia") {
+    filtroFecha = "AND r.fecha_registro >= DATE_SUB(NOW(), INTERVAL 1 DAY)";
+  } else if (rango === "semana") {
+    filtroFecha = "AND r.fecha_registro >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+  } else if (rango === "mes") {
+    filtroFecha = "AND r.fecha_registro >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+  } else if (rango === "anio") {
+    filtroFecha = "AND r.fecha_registro >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+  }
+
   try {
-    // Ejecutar ambas queries en paralelo
+    // Ejecutar ambas queries en paralelo con el filtro de fecha
     const [porTipoResult, porHoraResult] = await Promise.all([
       pool.query(`
         SELECT t.nombre, COUNT(r.id_reporte) as total
         FROM Reporte r
         JOIN Tipo_Incidente t ON r.id_tipo = t.id_tipo
-        WHERE r.estado = 'APROBADO'
+        WHERE r.estado IN ('APROBADO', 'HISTORICO')
+        ${filtroFecha}
         GROUP BY t.nombre
       `),
       pool.query(`
-        SELECT HOUR(fecha_registro) as hora, COUNT(*) as total
-        FROM Reporte
-        WHERE estado = 'APROBADO'
+        SELECT HOUR(r.fecha_registro) as hora, COUNT(*) as total
+        FROM Reporte r
+        WHERE r.estado IN ('APROBADO', 'HISTORICO')
+        ${filtroFecha}
         GROUP BY hora
         ORDER BY hora
       `)
@@ -245,25 +260,51 @@ const depurarReportesAntiguos = async (req, res) => {
 };
 
 const obtenerHistorico = async (req, res) => {
-  // Paginación
+  // Paginación y Filtros
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
   const offset = (page - 1) * limit;
+  
+  const { tipo, estado, desde, hasta } = req.query;
+
+  let whereClauses = ["r.estado IN ('APROBADO', 'HISTORICO')"]; // Por defecto activos e históricos
+  let queryParams = [];
+
+  if (estado && estado !== "TODOS") {
+    whereClauses = [`r.estado = ?`];
+    queryParams.push(estado);
+  }
+  
+  if (tipo && tipo !== "TODOS") {
+    whereClauses.push(`r.id_tipo = ?`);
+    queryParams.push(tipo);
+  }
+  
+  if (desde) {
+    whereClauses.push(`r.fecha_registro >= ?`);
+    queryParams.push(desde);
+  }
+  if (hasta) {
+    whereClauses.push(`r.fecha_registro <= ?`);
+    queryParams.push(`${hasta} 23:59:59`);
+  }
+
+  const whereString = "WHERE " + whereClauses.join(" AND ");
 
   try {
-    // El admin ve TODO el histórico sin restricción temporal
+    // El admin ve activos e históricos con filtros aplicados
     const [reportes] = await pool.query(`
-      SELECT r.id_reporte, r.latitud, r.longitud, r.fecha_registro, r.descripcion, t.nombre AS tipo_incidente
+      SELECT r.id_reporte, r.latitud, r.longitud, r.fecha_registro, r.descripcion, r.estado, t.nombre AS tipo_incidente
       FROM Reporte r
       JOIN Tipo_Incidente t ON r.id_tipo = t.id_tipo
-      WHERE r.estado = 'HISTORICO'
+      ${whereString}
       ORDER BY r.fecha_registro DESC
       LIMIT ? OFFSET ?
-    `, [limit, offset]);
+    `, [...queryParams, limit, offset]);
 
-    const [[{ total }]] = await pool.query(
-      "SELECT COUNT(*) as total FROM Reporte WHERE estado = 'HISTORICO'"
-    );
+    const [[{ total }]] = await pool.query(`
+      SELECT COUNT(*) as total FROM Reporte r ${whereString}
+    `, queryParams);
 
     res.json({ total, page, limit, totalPages: Math.ceil(total / limit), reportes });
   } catch (error) {

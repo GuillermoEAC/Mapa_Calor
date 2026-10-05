@@ -1,23 +1,32 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { History, Search, Calendar, MapPin, RefreshCw, ExternalLink } from "lucide-react";
+import { History, Search, Calendar, MapPin, RefreshCw, ExternalLink, Map as MapIcon, X } from "lucide-react";
 import { API_BASE_URL } from "../config";
+import MapaHistorico from "./MapaHistorico";
 
 const TIPOS_COLORES = {
   "Robo / Asalto": { bg: "rgba(239, 68, 68, 0.15)", text: "#f87171", border: "rgba(239, 68, 68, 0.3)" },
   "Vandalismo": { bg: "rgba(249, 115, 22, 0.15)", text: "#fb923c", border: "rgba(249, 115, 22, 0.3)" },
   "Fallo de Alumbrado": { bg: "rgba(234, 179, 8, 0.15)", text: "#facc15", border: "rgba(234, 179, 8, 0.3)" },
   "Actividad Sospechosa": { bg: "rgba(139, 92, 246, 0.15)", text: "#c084fc", border: "rgba(139, 92, 246, 0.3)" },
+  "Acoso / Zona Insegura": { bg: "rgba(236, 72, 153, 0.15)", text: "#f472b6", border: "rgba(236, 72, 153, 0.3)" },
+  "Fuga de Agua": { bg: "rgba(14, 165, 233, 0.15)", text: "#38bdf8", border: "rgba(14, 165, 233, 0.3)" },
+  "Accidente Vehicular": { bg: "rgba(6, 182, 212, 0.15)", text: "#22d3ee", border: "rgba(6, 182, 212, 0.3)" },
+  "Incendio / Maleza": { bg: "rgba(234, 88, 12, 0.15)", text: "#f97316", border: "rgba(234, 88, 12, 0.3)" },
+  "Fuga de Gas": { bg: "rgba(253, 224, 71, 0.15)", text: "#fef08a", border: "rgba(253, 224, 71, 0.3)" },
 };
 
 const HistoricoReportes = ({ token }) => {
   const [reportes, setReportes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
+  const [showMapa, setShowMapa] = useState(false);
+  const [estadoFilter, setEstadoFilter] = useState("TODOS");
+  const [tipoFilter, setTipoFilter] = useState("TODOS");
 
   const cargarHistorico = async () => {
     setLoading(true);
     try {
-      const respuesta = await fetch(`${API_BASE_URL}/api/reportes/historico`, {
+      const respuesta = await fetch(`${API_BASE_URL}/api/reportes/historico?estado=${estadoFilter}&tipo=${tipoFilter}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const datos = await respuesta.json();
@@ -37,7 +46,7 @@ const HistoricoReportes = ({ token }) => {
 
   useEffect(() => {
     cargarHistorico();
-  }, []);
+  }, [estadoFilter, tipoFilter]);
 
   const reportesFiltrados = useMemo(() => {
     const lista = Array.isArray(reportes) ? reportes : [];
@@ -77,14 +86,49 @@ const HistoricoReportes = ({ token }) => {
             }}
           >
             <History size={22} color="#38bdf8" />
-            <span>Histórico de Reportes</span>
+            <span>Base de Datos General</span>
           </h2>
           <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
-            Registros archivados con más de 30 días de antigüedad.
+            Consulta de todos los reportes (Activos e Históricos).
           </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          
+          <select
+            value={estadoFilter}
+            onChange={(e) => setEstadoFilter(e.target.value)}
+            style={{
+              padding: "8px 14px", fontSize: "13px", borderRadius: "10px",
+              backgroundColor: "rgba(24, 24, 27, 0.8)", borderColor: "rgba(255, 255, 255, 0.1)",
+              color: "#f4f4f5", outline: "none", cursor: "pointer",
+            }}
+          >
+            <option value="TODOS">Todos los Estados</option>
+            <option value="APROBADO">Activos (En Mapa)</option>
+            <option value="HISTORICO">Archivados (>30 días)</option>
+          </select>
+
+          <select
+            value={tipoFilter}
+            onChange={(e) => setTipoFilter(e.target.value)}
+            style={{
+              padding: "8px 14px", fontSize: "13px", borderRadius: "10px",
+              backgroundColor: "rgba(24, 24, 27, 0.8)", borderColor: "rgba(255, 255, 255, 0.1)",
+              color: "#f4f4f5", outline: "none", cursor: "pointer", maxWidth: "160px"
+            }}
+          >
+            <option value="TODOS">Todos los Tipos</option>
+            <option value="1">Robo / Asalto</option>
+            <option value="2">Vandalismo</option>
+            <option value="3">Fallo de Alumbrado</option>
+            <option value="4">Actividad Sospechosa</option>
+            <option value="5">Acoso / Zona Insegura</option>
+            <option value="6">Fuga de Agua</option>
+            <option value="7">Accidente Vehicular</option>
+            <option value="8">Incendio / Maleza</option>
+            <option value="9">Fuga de Gas</option>
+          </select>
           <div style={{ position: "relative" }}>
             <div
               style={{
@@ -114,6 +158,28 @@ const HistoricoReportes = ({ token }) => {
               }}
             />
           </div>
+
+          <button
+            onClick={() => setShowMapa(true)}
+            disabled={reportesFiltrados.length === 0}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 14px",
+              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              borderRadius: "10px",
+              color: "#ffffff",
+              fontSize: "12.5px",
+              fontWeight: 600,
+              cursor: reportesFiltrados.length === 0 ? "not-allowed" : "pointer",
+              opacity: reportesFiltrados.length === 0 ? 0.5 : 1,
+            }}
+          >
+            <MapIcon size={14} />
+            <span>Mapa Histórico</span>
+          </button>
 
           <button
             onClick={cargarHistorico}
@@ -160,7 +226,7 @@ const HistoricoReportes = ({ token }) => {
             {busqueda ? "Sin coincidencias" : "No hay reportes archivados"}
           </h3>
           <p style={{ margin: "6px 0 0 0", fontSize: "12.5px", color: "#71717a" }}>
-            {busqueda ? "Intenta con otro término." : "Los incidentes con más de 30 días aparecerán aquí."}
+            {busqueda ? "Intenta con otro término." : "Intenta ajustando los filtros."}
           </p>
         </div>
       ) : (
@@ -170,6 +236,7 @@ const HistoricoReportes = ({ token }) => {
               <thead>
                 <tr>
                   <th>ID</th>
+                  <th>Estado</th>
                   <th>Tipo</th>
                   <th>Descripción</th>
                   <th>Fecha</th>
@@ -188,6 +255,16 @@ const HistoricoReportes = ({ token }) => {
                     <tr key={rep.id_reporte}>
                       <td style={{ color: "#71717a", fontFamily: "monospace", fontWeight: 600 }}>
                         #{rep.id_reporte}
+                      </td>
+                      <td>
+                        <span style={{
+                          padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600,
+                          backgroundColor: rep.estado === 'APROBADO' ? "rgba(16, 185, 129, 0.15)" : "rgba(113, 113, 122, 0.15)",
+                          color: rep.estado === 'APROBADO' ? "#34d399" : "#a1a1aa",
+                          border: `1px solid ${rep.estado === 'APROBADO' ? "rgba(16, 185, 129, 0.3)" : "rgba(113, 113, 122, 0.3)"}`
+                        }}>
+                          {rep.estado === 'APROBADO' ? 'ACTIVO' : 'HISTÓRICO'}
+                        </span>
                       </td>
                       <td>
                         <span
@@ -246,6 +323,47 @@ const HistoricoReportes = ({ token }) => {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para el Mapa Histórico */}
+      {showMapa && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0, 0, 0, 0.75)",
+          backdropFilter: "blur(4px)",
+          zIndex: 9999,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "20px"
+        }}>
+          <div className="admin-card animate-modal" style={{
+            width: "100%", maxWidth: "1000px", height: "80vh",
+            display: "flex", flexDirection: "column",
+            overflow: "hidden"
+          }}>
+            <div style={{
+              padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              background: "rgba(24,24,27,0.95)"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <MapIcon size={18} color="#10b981" /> Mapa de Densidad Histórica
+              </h3>
+              <button
+                onClick={() => setShowMapa(false)}
+                style={{
+                  background: "rgba(255,255,255,0.05)", border: "none", color: "#a1a1aa",
+                  borderRadius: "8px", padding: "6px", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ flex: 1, position: "relative" }}>
+              <MapaHistorico reportes={reportesFiltrados} />
+            </div>
           </div>
         </div>
       )}
