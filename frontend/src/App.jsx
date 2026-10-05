@@ -288,22 +288,9 @@ function App() {
   }
 
   return (
-    <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden", backgroundColor: "var(--bg-deep)" }}>
+    <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", backgroundColor: "var(--bg-deep)" }}>
       {/* ── LOGO Y TÍTULO FLOTANTE (Esquina superior izquierda - Sin barra de header) ── */}
-      <div
-        className="glass-panel animate-fade-in"
-        style={{
-          position: "absolute",
-          top: "18px",
-          left: "20px",
-          zIndex: 1000,
-          padding: "10px 16px",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
-        }}
-      >
+      <div className="glass-panel animate-fade-in hud-titulo">
         <div
           style={{
             display: "flex",
@@ -332,25 +319,14 @@ function App() {
           >
             Mapa de Inseguridad
           </h1>
-          <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500 }}>
+          <span className="hud-subtitulo" style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500 }}>
             Los Mochis • Monitoreo Ciudadano
           </span>
         </div>
       </div>
 
       {/* ── BOTONES DE ACCIÓN FLOTANTES (Esquina superior derecha) ── */}
-      <div
-        className="animate-fade-in"
-        style={{
-          position: "absolute",
-          top: "18px",
-          right: "20px",
-          zIndex: 1000,
-          display: "flex",
-          gap: "8px",
-          alignItems: "center",
-        }}
-      >
+      <div className="animate-fade-in hud-acciones">
         <button 
           onClick={() => setAlertasAbierto(true)} 
           className="btn-action"
@@ -379,15 +355,7 @@ function App() {
       </main>
 
       {/* ── BOTÓN FLOTANTE DESTACADO (FAB) "+ Reportar Incidente" ── */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "26px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 1000,
-        }}
-      >
+      <div className="hud-fab-wrap">
         <button 
           onClick={manejarClickReportar} 
           className="btn-fab-reportar animate-fade-in"

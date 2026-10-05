@@ -501,47 +501,18 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   return (
     <div style={{ position: "relative", height: "100%", width: "100%" }}>
       {/* ── Contador flotante de incidentes visibles ── */}
-      <div 
-        className="glass-pill animate-fade-in"
-        style={{
-          position: "absolute",
-          top: "80px",
-          left: "20px",
-          zIndex: 1000,
-          padding: "7px 14px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "12px",
-          fontWeight: 600,
-          color: "#e2e8f0",
-          boxShadow: "0 6px 16px rgba(0,0,0,0.35)",
-        }}
-      >
-        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8" }} />
-        <span>{puntosFiltrados.length} {puntosFiltrados.length === 1 ? "incidente visible" : "incidentes visibles"}{textoTiempo}</span>
+      <div className="glass-pill animate-fade-in hud-contador">
+        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8", flexShrink: 0 }} />
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{puntosFiltrados.length} {puntosFiltrados.length === 1 ? "incidente visible" : "incidentes visibles"}{textoTiempo}</span>
       </div>
 
       {/* ── Botón flotante para abrir Drawer de Filtros y Capas ── */}
       <button
         onClick={() => setDrawerAbierto(true)}
-        className="btn-action glass-pill animate-fade-in"
-        style={{
-          position: "absolute",
-          top: "80px",
-          right: "20px",
-          zIndex: 1000,
-          padding: "8px 16px",
-          fontSize: "13px",
-          fontWeight: 600,
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          boxShadow: "0 6px 16px rgba(0,0,0,0.35)",
-        }}
+        className="btn-action glass-pill animate-fade-in hud-filtros"
       >
         <SlidersHorizontal size={15} />
-        Filtros y Capas ({filtrosActivos.size}/9)
+        Filtros<span className="hide-mobile">&nbsp;y Capas</span> ({filtrosActivos.size}/9)
       </button>
 
       {/* ── Drawer Lateral Deslizante ── */}
@@ -860,46 +831,28 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
       {/* ── Botón flotante: Mi Ubicación ── */}
       <button
         onClick={obtenerMiUbicacion}
-        className="btn-premium btn-purple"
-        style={{
-          position: "absolute",
-          bottom: "85px",
-          left: "20px",
-          zIndex: 1000,
-          padding: "12px 22px",
-          fontSize: "14px",
-        }}
+        className="btn-premium hud-btn-mapa hud-btn-ubicacion"
+        title="Mi Ubicación"
       >
         <User size={16} />
-        Mi Ubicación
+        <span className="hide-mobile">Mi Ubicación</span>
       </button>
 
       {/* ── Botón flotante: Compartir Vista ── */}
       <button
         onClick={compartirVista}
-        className="btn-premium btn-primary"
-        style={{
-          position: "absolute",
-          bottom: "30px",
-          left: "20px",
-          zIndex: 1000,
-          padding: "12px 22px",
-          fontSize: "14px",
-        }}
+        className="btn-premium hud-btn-mapa hud-btn-compartir"
+        title="Compartir Vista"
       >
         <Share2 size={16} />
-        Compartir Vista
+        <span className="hide-mobile">Compartir Vista</span>
       </button>
 
       {/* ── Toast ── */}
       {toastVisible && (
         <div
-          className="animate-fade-in"
+          className="animate-fade-in hud-toast"
           style={{
-            position: "absolute",
-            bottom: "88px",
-            left: "20px",
-            zIndex: 1000,
             backgroundColor: "rgba(16, 185, 129, 0.95)",
             backdropFilter: "blur(8px)",
             WebkitBackdropFilter: "blur(8px)",
