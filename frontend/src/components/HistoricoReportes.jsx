@@ -106,7 +106,7 @@ const HistoricoReportes = ({ token }) => {
           >
             <option value="TODOS">Todos los Estados</option>
             <option value="APROBADO">Activos (En Mapa)</option>
-            <option value="HISTORICO">Archivados (>30 días)</option>
+            <option value="HISTORICO">Archivados (&gt;30 días)</option>
           </select>
 
           <select
