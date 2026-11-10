@@ -55,6 +55,7 @@ CREATE INDEX idx_reporte_estado ON Reporte(estado);
 CREATE INDEX idx_reporte_tipo ON Reporte(id_tipo);
 CREATE INDEX idx_reporte_fecha ON Reporte(fecha_registro);
 CREATE INDEX idx_reporte_estado_fecha ON Reporte(estado, fecha_registro);
+CREATE INDEX idx_reporte_estado_tipo_fecha ON Reporte(estado, id_tipo, fecha_registro);
 
 -- Índices para la tabla Suscripcion_Alerta
 CREATE INDEX idx_suscripcion_verificado ON Suscripcion_Alerta(verificado);
@@ -65,17 +66,22 @@ CREATE INDEX idx_suscripcion_coords ON Suscripcion_Alerta(latitud_zona, longitud
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- 7. Insertamos los datos de prueba
--- NOTA: Las contraseñas ahora son hashes bcrypt del valor '123456'
+-- NOTA: Las contraLibrariesseñas ahora son hashes bcrypt del valor '123456'
 -- Generado con: bcrypt.hashSync('123456', 12)
 INSERT INTO Administrador (correo, contrasena) 
 VALUES ('admin@tuproyecto.com', '$2b$12$zep40ZvYYUkwBcSI.06GJeWlwpb4lOea5R9/mcd8RarodeLgJ0hlO'),
        ('admin', '$2b$12$zep40ZvYYUkwBcSI.06GJeWlwpb4lOea5R9/mcd8RarodeLgJ0hlO');
 
-INSERT INTO Tipo_Incidente (nombre, color_mapa, intensidad_huella) VALUES 
-('Robo / Asalto', 'red', 3),
-('Vandalismo', 'orange', 2),
-('Fallo de Alumbrado', 'gray', 1),
-('Actividad Sospechosa', 'purple', 1);
+INSERT INTO Tipo_Incidente (id_tipo, nombre, color_mapa, intensidad_huella) VALUES 
+(1, 'Robo / Asalto', 'red', 3),
+(2, 'Vandalismo', 'orange', 2),
+(3, 'Fallo de Alumbrado', 'yellow', 1),
+(4, 'Actividad Sospechosa', 'purple', 1),
+(5, 'Acoso / Zona Insegura', 'pink', 3),
+(6, 'Fuga de Agua', 'blue', 1),
+(7, 'Accidente Vehicular', 'cyan', 2),
+(8, 'Incendio / Quema', 'orange', 3),
+(9, 'Fuga de Gas', 'yellow', 3);
 
 -- 8. Tabla Configuracion_Mapa (CU 8)
 CREATE TABLE Configuracion_Mapa (

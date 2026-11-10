@@ -7,6 +7,11 @@ const TIPOS_COLORES = {
   "Vandalismo": { bg: "rgba(249, 115, 22, 0.15)", text: "#fb923c", border: "rgba(249, 115, 22, 0.3)" },
   "Fallo de Alumbrado": { bg: "rgba(234, 179, 8, 0.15)", text: "#facc15", border: "rgba(234, 179, 8, 0.3)" },
   "Actividad Sospechosa": { bg: "rgba(139, 92, 246, 0.15)", text: "#c084fc", border: "rgba(139, 92, 246, 0.3)" },
+  "Acoso / Zona Insegura": { bg: "rgba(236, 72, 153, 0.15)", text: "#f472b6", border: "rgba(236, 72, 153, 0.3)" },
+  "Fuga de Agua": { bg: "rgba(14, 165, 233, 0.15)", text: "#38bdf8", border: "rgba(14, 165, 233, 0.3)" },
+  "Accidente Vehicular": { bg: "rgba(6, 182, 212, 0.15)", text: "#22d3ee", border: "rgba(6, 182, 212, 0.3)" },
+  "Incendio / Quema": { bg: "rgba(234, 88, 12, 0.15)", text: "#fb923c", border: "rgba(234, 88, 12, 0.3)" },
+  "Fuga de Gas": { bg: "rgba(253, 224, 71, 0.15)", text: "#fef08a", border: "rgba(253, 224, 71, 0.3)" },
 };
 
 const PanelAdmin = ({ token }) => {
@@ -37,13 +42,16 @@ const PanelAdmin = ({ token }) => {
   const cambiarEstado = async (id, estado) => {
     setProcesandoId(id);
     try {
-      await fetch(`${API_BASE_URL}/api/reportes/${id}/estado`, {
+      const resp = await fetch(`${API_BASE_URL}/api/reportes/${id}/estado`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ nuevo_estado: estado }),
       });
 
-      await cargarReportes();
+      if (resp.ok) {
+        // Actualizar lista en memoria al instante sin recargar toda la tabla por red
+        setReportes((prev) => prev.filter((r) => r.id_reporte !== id));
+      }
     } catch (error) {
       console.error("Error al cambiar estado:", error);
     } finally {

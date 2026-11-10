@@ -2,17 +2,25 @@ import React, { useState, useEffect } from "react";
 import { Phone, ShieldAlert, X } from "lucide-react";
 import { API_BASE_URL } from "../config";
 
+// Caché en memoria para no volver a pedir el directorio cada vez que se abre el modal
+let contactosCache = null;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CU-12: Directorio de Emergencia con UI Glassmorphic Premium
 // ─────────────────────────────────────────────────────────────────────────────
 const DirectorioEmergencia = ({ isOpen, onClose }) => {
-  const [contactos, setContactos] = useState([]);
+  const [contactos, setContactos] = useState(contactosCache || []);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !contactosCache) {
       fetch(`${API_BASE_URL}/api/emergencias`)
         .then(res => res.json())
-        .then(data => setContactos(data))
+        .then(data => {
+          if (Array.isArray(data)) {
+            contactosCache = data;
+            setContactos(data);
+          }
+        })
         .catch(err => console.error("Error al cargar directorio:", err));
     }
   }, [isOpen]);
@@ -23,13 +31,13 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
     <div style={{
       position: "fixed",
       top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: "rgba(8, 12, 24, 0.75)",
+      backgroundColor: "rgba(8, 12, 24, 0.85)",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
       zIndex: 2000,
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
+      backdropFilter: "blur(4px)",
+      WebkitBackdropFilter: "blur(4px)",
       padding: "20px"
     }}>
       <div 

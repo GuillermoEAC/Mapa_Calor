@@ -36,13 +36,13 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: "rgba(8, 12, 24, 0.75)",
+        backgroundColor: "rgba(8, 12, 24, 0.85)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         zIndex: 9999,
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
+        backdropFilter: "blur(4px)",
+        WebkitBackdropFilter: "blur(4px)",
         padding: "20px"
       }}
     >

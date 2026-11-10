@@ -45,11 +45,56 @@ const ESTILOS_MAPA = {
 };
 
 const HEAT_GRADIENT = {
-  0.2: "rgba(234, 179, 8, 0)",   // Transparente (Baja densidad)
-  0.4: "#eab308",                // Amarillo (Densidad media-baja)
-  0.6: "#f97316",                // Naranja (Densidad media)
-  0.8: "#ef4444",                // Rojo (Densidad alta)
-  1.0: "#7f1d1d",                // Rojo oscuro (Concentración máxima)
+  0.10: "rgba(250, 204, 21, 0)",    // Desvanecimiento exterior suave
+  0.25: "rgba(250, 204, 21, 0.35)", // Halo ámbar tenue
+  0.45: "#eab308",                  // Amarillo cálido (Densidad baja-media)
+  0.65: "#f97316",                  // Naranja intenso (Densidad media-alta)
+  0.85: "#ef4444",                  // Rojo alerta (Densidad alta)
+  1.00: "#7f1d1d",                  // Núcleo carmesí oscuro (Concentración crítica)
+};
+
+// Peso térmico según gravedad del tipo de incidente (evita que todos los puntos midan igual)
+const PESO_TERMICO_TIPO = {
+  1: 0.85, // Robo / Asalto
+  2: 0.55, // Vandalismo
+  3: 0.38, // Fallo de Alumbrado
+  4: 0.45, // Actividad Sospechosa
+  5: 0.80, // Acoso / Zona Insegura
+  6: 0.35, // Fuga de Agua
+  7: 0.65, // Accidente Vehicular
+  8: 0.78, // Incendio / Quema
+  9: 0.75, // Fuga de Gas
+};
+
+const MODOS_CALOR = {
+  organico: { nombre: "Orgánico Irregular", factorRadio: 0.85, factorBlur: 1.35, usarLobulos: true },
+  difuminado: { nombre: "Neblina Difuminada", factorRadio: 1.15, factorBlur: 1.65, usarLobulos: true },
+  concentrado: { nombre: "Focos Concentrados", factorRadio: 0.65, factorBlur: 1.10, usarLobulos: false },
+};
+
+// Generador determinista de huella térmica asimétrica para romper los círculos perfectos
+const generarHuellaOrganica = (id, lat, lng, tipo) => {
+  const peso = PESO_TERMICO_TIPO[tipo] || 0.6;
+  const seed = (Number(id) || 1) * 2654435761 + Math.round((lat + lng) * 100000);
+
+  // Función pseudo-aleatoria determinista en rango [0, 1)
+  const rand = (n) => {
+    const x = Math.sin(seed + n * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  };
+
+  // Punto central + 3 lóbulos irregulares alrededor (~55m a ~165m en distintas direcciones)
+  const nodos = [[lat, lng, peso]];
+  for (let k = 1; k <= 3; k++) {
+    const angulo = rand(k) * Math.PI * 2;
+    const distGrados = 0.00045 + rand(k + 10) * 0.00105; // ~50m a ~165m
+    const elongacion = k === 1 ? 1.25 : 0.85;
+    const dLat = Math.cos(angulo) * distGrados * elongacion;
+    const dLng = Math.sin(angulo) * distGrados;
+    const subPeso = +(peso * (0.58 - k * 0.11)).toFixed(2);
+    nodos.push([lat + dLat, lng + dLng, subPeso]);
+  }
+  return nodos;
 };
 
 const CENTRO_LOS_MOCHIS = [25.7904, -108.9858];
@@ -58,16 +103,22 @@ const MAX_BOUNDS = [
   [26.1, -108.7],
 ];
 
-const MapRefRegister = ({ setMap }) => {
+// Formateador de fechas único reutilizable (mucho más rápido que toLocaleString por marcador)
+const FECHA_FORMATTER = new Intl.DateTimeFormat("es-MX", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
+const MapRefRegister = memo(({ setMap }) => {
   const map = useMap();
   useEffect(() => {
     setMap(map);
     return () => setMap(null);
   }, [map, setMap]);
   return null;
-};
+});
 
-const DarkModeManager = ({ isDark }) => {
+const DarkModeManager = memo(({ isDark }) => {
   const map = useMap();
   useEffect(() => {
     const container = map.getContainer();
@@ -79,33 +130,27 @@ const DarkModeManager = ({ isDark }) => {
     }
   }, [isDark, map]);
   return null;
-};
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Componente: Capa de Mapa de Calor (leaflet.heat) — Memoizado
+// Componente: Capa de Mapa de Calor (leaflet.heat) — Reutiliza instancia Canvas
 // ─────────────────────────────────────────────────────────────────────────────
-const HeatLayer = memo(({ puntos, radio, blur }) => {
+const HeatLayer = memo(({ puntos, radio, blur, opacidad }) => {
   const map = useMap();
   const heatRef = useRef(null);
 
+  // Crear la capa una sola vez al montar y limpiarla solo al desmontar
   useEffect(() => {
-    // Limpiar capa anterior
-    if (heatRef.current) {
-      map.removeLayer(heatRef.current);
-      heatRef.current = null;
-    }
-
-    if (!puntos || puntos.length === 0) return;
-
-    heatRef.current = L.heatLayer(puntos, {
+    const layer = L.heatLayer([], {
       radius: radio,
       blur: blur,
       maxZoom: 17,
       max: 1.0,
+      minOpacity: opacidad,
       gradient: HEAT_GRADIENT,
     });
-
-    heatRef.current.addTo(map);
+    layer.addTo(map);
+    heatRef.current = layer;
 
     return () => {
       if (heatRef.current) {
@@ -113,7 +158,23 @@ const HeatLayer = memo(({ puntos, radio, blur }) => {
         heatRef.current = null;
       }
     };
-  }, [map, puntos, radio, blur]);
+  }, [map]);
+
+  // Actualizar opciones en caliente sin recrear el canvas
+  useEffect(() => {
+    if (!heatRef.current) return;
+    heatRef.current.setOptions({
+      radius: radio,
+      blur: blur,
+      minOpacity: opacidad,
+    });
+  }, [radio, blur, opacidad]);
+
+  // Actualizar puntos en caliente sin destruir la capa
+  useEffect(() => {
+    if (!heatRef.current) return;
+    heatRef.current.setLatLngs(puntos || []);
+  }, [puntos]);
 
   return null;
 });
@@ -215,6 +276,7 @@ const ICONOS_CACHE = {
 // ─────────────────────────────────────────────────────────────────────────────
 const IncidenteMarker = memo(({ punto }) => {
   const infoTipo = TIPOS_INCIDENTES[punto.tipo] || { color: "#8b5cf6", nombre: "Desconocido" };
+  const [abierto, setAbierto] = useState(false);
   const [descripcion, setDescripcion] = useState(null);
   const [cargandoDesc, setCargandoDesc] = useState(false);
   
@@ -222,7 +284,8 @@ const IncidenteMarker = memo(({ punto }) => {
   const customIcon = ICONOS_CACHE[punto.tipo] || ICONOS_CACHE[1];
 
   // Cargar descripción bajo demanda al abrir el popup
-  const cargarDescripcion = useCallback(() => {
+  const handlePopupOpen = useCallback(() => {
+    setAbierto(true);
     if (descripcion !== null || cargandoDesc || !punto.id) return;
     setCargandoDesc(true);
     fetch(`${API_BASE_URL}/api/reportes/detalle/${punto.id}`)
@@ -232,69 +295,73 @@ const IncidenteMarker = memo(({ punto }) => {
       .finally(() => setCargandoDesc(false));
   }, [punto.id, descripcion, cargandoDesc]);
 
+  const eventHandlers = useMemo(() => ({ popupopen: handlePopupOpen }), [handlePopupOpen]);
+
   return (
     <Marker
-      position={[punto.lat, punto.lng]}
+      position={punto.pos}
       icon={customIcon}
-      eventHandlers={{ popupopen: cargarDescripcion }}
+      eventHandlers={eventHandlers}
     >
       <Popup>
-        <div style={{ minWidth: "220px", fontFamily: "Outfit, sans-serif", padding: "2px" }}>
-          {/* Header con el tipo y punto de color */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "4px" }}>
-            <div style={{ 
-              width: "32px", height: "32px", borderRadius: "8px", 
-              backgroundColor: `${infoTipo.color}15`, 
-              display: "flex", alignItems: "center", justifyContent: "center",
-              border: `1px solid ${infoTipo.color}40`,
-              flexShrink: 0,
-              marginTop: "2px"
-            }}>
-              <span style={{ display: "block", width: "10px", height: "10px", borderRadius: "50%", backgroundColor: infoTipo.color, boxShadow: `0 0 10px ${infoTipo.color}80` }}></span>
-            </div>
-            <div>
-              <h4 style={{ margin: 0, color: "#f8fafc", fontWeight: "700", fontSize: "15px", letterSpacing: "-0.3px", lineHeight: "1.2" }}>
-                {infoTipo.nombre}
-              </h4>
-              <p style={{ margin: "4px 0 0 0", fontSize: "11.5px", color: "#94a3b8", fontWeight: "500" }}>
-                {new Date(punto.fecha).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })}
-              </p>
-            </div>
-          </div>
-          
-          <div style={{ width: "100%", height: "1px", background: "linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)", margin: "12px 0" }}></div>
-
-          {/* Body con la descripción (cargada bajo demanda) */}
-          {cargandoDesc ? (
-            <div style={{ padding: "10px", textAlign: "center" }}>
-              <span style={{ fontSize: "12px", color: "#94a3b8" }}>Cargando...</span>
-            </div>
-          ) : descripcion ? (
-            <div style={{
-              background: "rgba(15, 23, 42, 0.4)",
-              border: "1px solid rgba(255,255,255,0.05)",
-              borderRadius: "8px",
-              padding: "12px",
-              position: "relative"
-            }}>
-              <p style={{ 
-                margin: 0, 
-                fontSize: "13px", 
-                color: "#e2e8f0", 
-                lineHeight: "1.6",
-                position: "relative",
-                zIndex: 1,
-                fontStyle: "italic"
+        {abierto && (
+          <div style={{ minWidth: "220px", fontFamily: "Outfit, sans-serif", padding: "2px" }}>
+            {/* Header con el tipo y punto de color */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "4px" }}>
+              <div style={{ 
+                width: "32px", height: "32px", borderRadius: "8px", 
+                backgroundColor: `${infoTipo.color}15`, 
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: `1px solid ${infoTipo.color}40`,
+                flexShrink: 0,
+                marginTop: "2px"
               }}>
-                "{descripcion}"
-              </p>
+                <span style={{ display: "block", width: "10px", height: "10px", borderRadius: "50%", backgroundColor: infoTipo.color, boxShadow: `0 0 10px ${infoTipo.color}80` }}></span>
+              </div>
+              <div>
+                <h4 style={{ margin: 0, color: "#f8fafc", fontWeight: "700", fontSize: "15px", letterSpacing: "-0.3px", lineHeight: "1.2" }}>
+                  {infoTipo.nombre}
+                </h4>
+                <p style={{ margin: "4px 0 0 0", fontSize: "11.5px", color: "#94a3b8", fontWeight: "500" }}>
+                  {punto.fechaStr}
+                </p>
+              </div>
             </div>
-          ) : (
-            <div style={{ padding: "10px", background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
-              <p style={{ margin: 0, fontSize: "12px", color: "#64748b", fontStyle: "italic", textAlign: "center" }}>Sin descripción adicional</p>
-            </div>
-          )}
-        </div>
+            
+            <div style={{ width: "100%", height: "1px", background: "linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)", margin: "12px 0" }}></div>
+
+            {/* Body con la descripción (cargada bajo demanda) */}
+            {cargandoDesc ? (
+              <div style={{ padding: "10px", textAlign: "center" }}>
+                <span style={{ fontSize: "12px", color: "#94a3b8" }}>Cargando...</span>
+              </div>
+            ) : descripcion ? (
+              <div style={{
+                background: "rgba(15, 23, 42, 0.4)",
+                border: "1px solid rgba(255,255,255,0.05)",
+                borderRadius: "8px",
+                padding: "12px",
+                position: "relative"
+              }}>
+                <p style={{ 
+                  margin: 0, 
+                  fontSize: "13px", 
+                  color: "#e2e8f0", 
+                  lineHeight: "1.6",
+                  position: "relative",
+                  zIndex: 1,
+                  fontStyle: "italic"
+                }}>
+                  "{descripcion}"
+                </p>
+              </div>
+            ) : (
+              <div style={{ padding: "10px", background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
+                <p style={{ margin: 0, fontSize: "12px", color: "#64748b", fontStyle: "italic", textAlign: "center" }}>Sin descripción adicional</p>
+              </div>
+            )}
+          </div>
+        )}
       </Popup>
     </Marker>
   );
@@ -333,7 +400,8 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
       alert("Tu navegador no admite geolocalización.");
     }
   }, []);
-  const [configMapa, setConfigMapa] = useState({ radio_puntos: 500 });
+  const [modoCalor, setModoCalor] = useState("organico");
+  const [configMapa, setConfigMapa] = useState({ radio_puntos: 500, desenfoque_puntos: 15, opacidad_puntos: 0.15 });
   
   // ── OPTIMIZACIÓN: Usar refs en lugar de estado para la posición del mapa. 
   // Esto evita re-renderizar todo el árbol de marcadores cada vez que se mueve el mapa.
@@ -341,7 +409,8 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   const mapZoomRef = useRef(compartirParams?.zoom || 13);
   const [toastVisible, setToastVisible] = useState(false);
 
-  // Callbacks estables para el MapTracker
+  // Callbacks estables para MapRefRegister y MapTracker
+  const registrarMapa = useCallback((m) => { mapRef.current = m; }, []);
   const handleCenterChange = useCallback((c) => { mapCenterRef.current = c; }, []);
   const handleZoomChange = useCallback((z) => { mapZoomRef.current = z; }, []);
 
@@ -396,17 +465,26 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         const datosConfig = await resConfig.json();
 
         const validos = [];
-        for (const p of datosPuntos) {
-          const lat = parseFloat(p.latitud);
-          const lng = parseFloat(p.longitud);
-          if (!isNaN(lat) && !isNaN(lng)) {
-            validos.push({
-              id: p.id_reporte,
-              lat,
-              lng,
-              tipo: p.id_tipo,
-              fecha: p.fecha_registro,
-            });
+        if (Array.isArray(datosPuntos)) {
+          for (const p of datosPuntos) {
+            const lat = parseFloat(p.latitud);
+            const lng = parseFloat(p.longitud);
+            if (!isNaN(lat) && !isNaN(lng)) {
+              const ts = p.fecha_registro ? new Date(p.fecha_registro).getTime() : NaN;
+              const peso = PESO_TERMICO_TIPO[p.id_tipo] || 0.6;
+              validos.push({
+                id: p.id_reporte,
+                lat,
+                lng,
+                pos: [lat, lng],
+                heatTuple: [lat, lng, peso],
+                heatOrganico: generarHuellaOrganica(p.id_reporte, lat, lng, p.id_tipo),
+                tipo: p.id_tipo,
+                tipoStr: String(p.id_tipo),
+                ts,
+                fechaStr: !isNaN(ts) ? FECHA_FORMATTER.format(ts) : "",
+              });
+            }
           }
         }
         setPuntosRaw(validos);
@@ -419,75 +497,78 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     return () => { cancelado = true; };
   }, []);
 
-  // ── Puntos filtrados por categoría y por tiempo (memoizado) ──
-  const puntosFiltrados = useMemo(() => {
-    const ahora = Date.now();
-    // Calcular inicio y fin del año en curso
-    const anioActual = new Date().getFullYear();
-    const inicioAnio = new Date(anioActual, 0, 1).getTime(); // 1 de Enero
-    const finAnio = new Date(anioActual, 11, 31, 23, 59, 59).getTime(); // 31 de Diciembre
-
-    return puntosRaw.filter((p) => {
-      // 1. Filtro por categoría de incidente
-      if (!filtrosActivos.has(p.tipo.toString())) return false;
-
-      // 2. Filtro por rango temporal
-      if (!p.fecha) return true;
-
-      const tiempoPunto = new Date(p.fecha).getTime();
-      if (isNaN(tiempoPunto)) return true;
-
-      if (filtroTiempo === "anio") return tiempoPunto >= inicioAnio && tiempoPunto <= finAnio;
-
-      const diffHoras = (ahora - tiempoPunto) / (1000 * 60 * 60);
-      if (filtroTiempo === "24h") return diffHoras <= 24;
-      if (filtroTiempo === "7d") return diffHoras <= 24 * 7;
-      if (filtroTiempo === "30d") return diffHoras <= 24 * 30;
-
-      return true;
-    });
-  }, [puntosRaw, filtrosActivos, filtroTiempo]);
-
-  // ── Datos del heatmap (memoizado para evitar re-crear el array) ──
-  const heatData = useMemo(
-    () => puntosFiltrados.map((p) => [p.lat, p.lng, 0.7]),
-    [puntosFiltrados]
-  );
-
-  const heatRadio = useMemo(
-    () => (configMapa.radio_puntos ? Math.min(configMapa.radio_puntos / 10, 50) : 35),
-    [configMapa.radio_puntos]
-  );
-
-  // Conteo en tiempo real según el filtro temporal activo
-  const conteoPorTipo = useMemo(() => {
+  // ── Paso 1: Filtrar una sola vez por tiempo y calcular conteos por tipo al mismo tiempo ──
+  const { puntosEnTiempo, conteoPorTipo } = useMemo(() => {
     const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
     const ahora = Date.now();
     const anioActual = new Date().getFullYear();
     const inicioAnio = new Date(anioActual, 0, 1).getTime();
     const finAnio = new Date(anioActual, 11, 31, 23, 59, 59).getTime();
+    const filtradosTiempo = [];
 
-    puntosRaw.forEach((p) => {
+    for (let i = 0; i < puntosRaw.length; i++) {
+      const p = puntosRaw[i];
       let cumpleTiempo = true;
-      if (p.fecha) {
-        const tiempoPunto = new Date(p.fecha).getTime();
-        if (!isNaN(tiempoPunto)) {
-          if (filtroTiempo === "anio") cumpleTiempo = tiempoPunto >= inicioAnio && tiempoPunto <= finAnio;
-          else {
-            const diffHoras = (ahora - tiempoPunto) / (1000 * 60 * 60);
-            if (filtroTiempo === "24h") cumpleTiempo = diffHoras <= 24;
-            else if (filtroTiempo === "7d") cumpleTiempo = diffHoras <= 24 * 7;
-            else if (filtroTiempo === "30d") cumpleTiempo = diffHoras <= 24 * 30;
-          }
+
+      if (!isNaN(p.ts)) {
+        if (filtroTiempo === "anio") {
+          cumpleTiempo = p.ts >= inicioAnio && p.ts <= finAnio;
+        } else {
+          const diffHoras = (ahora - p.ts) / 3600000;
+          if (filtroTiempo === "24h") cumpleTiempo = diffHoras <= 24;
+          else if (filtroTiempo === "7d") cumpleTiempo = diffHoras <= 168;
+          else if (filtroTiempo === "30d") cumpleTiempo = diffHoras <= 720;
         }
       }
 
-      if (cumpleTiempo && counts[p.tipo] !== undefined) {
-        counts[p.tipo]++;
+      if (cumpleTiempo) {
+        filtradosTiempo.push(p);
+        if (counts[p.tipo] !== undefined) {
+          counts[p.tipo]++;
+        }
       }
-    });
-    return counts;
+    }
+
+    return { puntosEnTiempo: filtradosTiempo, conteoPorTipo: counts };
   }, [puntosRaw, filtroTiempo]);
+
+  // ── Paso 2: Filtrar por categoría activa (instantáneo sobre puntosEnTiempo) ──
+  const puntosFiltrados = useMemo(
+    () => puntosEnTiempo.filter((p) => filtrosActivos.has(p.tipoStr)),
+    [puntosEnTiempo, filtrosActivos]
+  );
+
+  // ── Datos del heatmap (huella orgánica asimétrica o puntual según modo elegido) ──
+  const configModoCalor = MODOS_CALOR[modoCalor] || MODOS_CALOR.organico;
+
+  const heatData = useMemo(() => {
+    if (!configModoCalor.usarLobulos) {
+      return puntosFiltrados.map((p) => p.heatTuple);
+    }
+    const lista = [];
+    for (let i = 0; i < puntosFiltrados.length; i++) {
+      const nodos = puntosFiltrados[i].heatOrganico;
+      for (let j = 0; j < nodos.length; j++) {
+        lista.push(nodos[j]);
+      }
+    }
+    return lista;
+  }, [puntosFiltrados, configModoCalor.usarLobulos]);
+
+  const heatRadio = useMemo(() => {
+    const base = configMapa.radio_puntos ? Math.min(configMapa.radio_puntos / 16, 36) : 26;
+    return Math.round(base * configModoCalor.factorRadio);
+  }, [configMapa.radio_puntos, configModoCalor.factorRadio]);
+
+  const heatBlur = useMemo(() => {
+    const base = configMapa.desenfoque_puntos ? Math.max(Number(configMapa.desenfoque_puntos), 24) : 28;
+    return Math.round(base * configModoCalor.factorBlur);
+  }, [configMapa.desenfoque_puntos, configModoCalor.factorBlur]);
+
+  const heatOpacidad = useMemo(
+    () => (configMapa.opacidad_puntos ? parseFloat(configMapa.opacidad_puntos) : 0.15),
+    [configMapa.opacidad_puntos]
+  );
 
   const todosActivos = filtrosActivos.size === 9;
 
@@ -717,6 +798,41 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
               </div>
             </div>
 
+            {/* Sección: Modo de dispersión térmica */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa" }}>
+                Forma del Mapa de Calor
+              </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {Object.entries(MODOS_CALOR).map(([id, info]) => {
+                  const seleccionado = modoCalor === id;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => setModoCalor(id)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "9px 12px",
+                        borderRadius: "8px",
+                        background: seleccionado ? "rgba(56, 189, 248, 0.12)" : "rgba(255,255,255,0.02)",
+                        border: `1px solid ${seleccionado ? "#38bdf8" : "rgba(255,255,255,0.05)"}`,
+                        color: seleccionado ? "#38bdf8" : "#a1a1aa",
+                        fontSize: "12.5px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      <span>{info.nombre}</span>
+                      {seleccionado && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#38bdf8" }} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Sección estilos de mapa */}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "6px" }}>
               <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa" }}>
@@ -768,12 +884,14 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         zoomControl={false}
       >
         <ZoomControl position="bottomright" />
-        <MapRefRegister setMap={(map) => { mapRef.current = map; }} />
+        <MapRefRegister setMap={registrarMapa} />
         <DarkModeManager isDark={estiloMapaActivo === "oscuro"} />
         <TileLayer
           key={estiloMapaActivo}
           url={ESTILOS_MAPA[estiloMapaActivo].url}
           attribution="&copy; OpenStreetMap contributors"
+          keepBuffer={4}
+          updateWhenIdle={true}
         />
 
         <ClickHandler onMapClick={onMapClick} />
@@ -784,11 +902,11 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         />
 
         {/* Capa de calor */}
-        <HeatLayer puntos={heatData} radio={heatRadio} blur={20} />
+        <HeatLayer puntos={heatData} radio={heatRadio} blur={heatBlur} opacidad={heatOpacidad} />
 
-        {/* Marcadores individuales para popups */}
+        {/* Marcadores individuales para popups (con key estable por ID) */}
         {puntosFiltrados.map((p, i) => (
-          <IncidenteMarker key={`${p.lat}-${p.lng}-${i}`} punto={p} />
+          <IncidenteMarker key={p.id || `${p.lat}-${p.lng}-${i}`} punto={p} />
         ))}
 
         {ubicacionTemporal && (
@@ -896,4 +1014,4 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   );
 };
 
-export default MapaInteractivo;
+export default memo(MapaInteractivo);

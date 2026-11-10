@@ -22,6 +22,16 @@ const LIMITES = {
   lngMax: -108.70
 };
 
+// Caché en memoria para reportes aprobados (con invalidación automática al modificar estados)
+let aprobadosCache = null;
+let aprobadosCacheTime = 0;
+const APROBADOS_TTL_MS = 60 * 1000; // 60 segundos
+
+const invalidarCacheAprobados = () => {
+  aprobadosCache = null;
+  aprobadosCacheTime = 0;
+};
+
 const crearReporte = async (req, res) => {
   const { tipo, descripcion, latitud, longitud } = req.body;
 
@@ -99,6 +109,7 @@ const actualizarEstado = async (req, res) => {
       nuevo_estado,
       id_reporte,
     ]);
+    invalidarCacheAprobados();
     res.json({ mensaje: `Reporte actualizado a ${nuevo_estado}` });
 
     // Si el nuevo estado es APROBADO, verificar alertas cercanas (fire-and-forget)
@@ -121,6 +132,12 @@ const actualizarEstado = async (req, res) => {
 
 const obtenerAprobados = async (req, res) => {
   try {
+    const ahora = Date.now();
+    if (aprobadosCache && ahora - aprobadosCacheTime < APROBADOS_TTL_MS) {
+      res.set("Cache-Control", "public, max-age=30");
+      return res.json(aprobadosCache);
+    }
+
     // Solo campos necesarios para el mapa de calor (sin descripcion para ahorrar bytes)
     // LIMIT 500 como seguro: la depuración automática ya mantiene ~30 días de datos
     const [reportes] = await pool.query(`
@@ -131,8 +148,10 @@ const obtenerAprobados = async (req, res) => {
       LIMIT 500
     `);
 
-    // Cache header: los datos aprobados pueden cachearse 2 min
-    res.set("Cache-Control", "public, max-age=120");
+    aprobadosCache = reportes;
+    aprobadosCacheTime = ahora;
+
+    res.set("Cache-Control", "public, max-age=30");
     res.json(reportes);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener los datos del mapa" });
@@ -146,14 +165,15 @@ const obtenerTodos = async (req, res) => {
   const offset = (page - 1) * limit;
 
   try {
-    const [reportes] = await pool.query(`
-      SELECT id_reporte, latitud, longitud, estado, id_tipo, fecha_registro
-      FROM Reporte
-      ORDER BY fecha_registro DESC
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
-
-    const [[{ total }]] = await pool.query("SELECT COUNT(*) as total FROM Reporte");
+    const [[reportes], [[{ total }]]] = await Promise.all([
+      pool.query(`
+        SELECT id_reporte, latitud, longitud, estado, id_tipo, fecha_registro
+        FROM Reporte
+        ORDER BY fecha_registro DESC
+        LIMIT ? OFFSET ?
+      `, [limit, offset]),
+      pool.query("SELECT COUNT(*) as total FROM Reporte"),
+    ]);
 
     res.json({ total, page, limit, totalPages: Math.ceil(total / limit), reportes });
   } catch (error) {
@@ -164,14 +184,14 @@ const obtenerTodos = async (req, res) => {
 const insertarDatosPrueba = async (req, res) => {
   const centroLat = 25.7904;
   const centroLng = -108.9858;
-  const variacion = 0.01;
+  const variacion = 0.015;
 
   try {
     // Batch insert optimizado (una sola query en lugar de 20)
     const insertsValues = Array.from({ length: 20 }, (_, i) => {
       const lat = (centroLat + (Math.random() - 0.5) * variacion).toFixed(8);
       const lng = (centroLng + (Math.random() - 0.5) * variacion).toFixed(8);
-      const tipo = (i % 3) + 1;
+      const tipo = (i % 9) + 1;
       return [tipo, lat, lng, 'APROBADO'];
     });
 
@@ -181,6 +201,7 @@ const insertarDatosPrueba = async (req, res) => {
       `INSERT INTO Reporte (id_tipo, latitud, longitud, estado) VALUES ${placeholders}`,
       flatValues
     );
+    invalidarCacheAprobados();
 
     res.json({ mensaje: "20 reportes de prueba insertados con estado APROBADO", total: 20 });
   } catch (error) {
@@ -242,6 +263,7 @@ const depurarReportesAntiguos = async (req, res) => {
       WHERE fecha_registro < DATE_SUB(NOW(), INTERVAL 30 DAY)
       AND estado != 'HISTORICO'
     `);
+    if (resultado.affectedRows > 0) invalidarCacheAprobados();
     console.log(`[Depuración] Se movieron ${resultado.affectedRows} reportes a histórico.`);
     if (res) {
       return res.status(200).json({
@@ -292,19 +314,20 @@ const obtenerHistorico = async (req, res) => {
   const whereString = "WHERE " + whereClauses.join(" AND ");
 
   try {
-    // El admin ve activos e históricos con filtros aplicados
-    const [reportes] = await pool.query(`
-      SELECT r.id_reporte, r.latitud, r.longitud, r.fecha_registro, r.descripcion, r.estado, t.nombre AS tipo_incidente
-      FROM Reporte r
-      JOIN Tipo_Incidente t ON r.id_tipo = t.id_tipo
-      ${whereString}
-      ORDER BY r.fecha_registro DESC
-      LIMIT ? OFFSET ?
-    `, [...queryParams, limit, offset]);
-
-    const [[{ total }]] = await pool.query(`
-      SELECT COUNT(*) as total FROM Reporte r ${whereString}
-    `, queryParams);
+    // Ejecutar listado paginado y conteo en paralelo
+    const [[reportes], [[{ total }]]] = await Promise.all([
+      pool.query(`
+        SELECT r.id_reporte, r.latitud, r.longitud, r.fecha_registro, r.descripcion, r.estado, t.nombre AS tipo_incidente
+        FROM Reporte r
+        JOIN Tipo_Incidente t ON r.id_tipo = t.id_tipo
+        ${whereString}
+        ORDER BY r.fecha_registro DESC
+        LIMIT ? OFFSET ?
+      `, [...queryParams, limit, offset]),
+      pool.query(`
+        SELECT COUNT(*) as total FROM Reporte r ${whereString}
+      `, queryParams),
+    ]);
 
     res.json({ total, page, limit, totalPages: Math.ceil(total / limit), reportes });
   } catch (error) {

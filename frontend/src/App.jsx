@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from "react";
+import React, { useState, useMemo, useCallback, Suspense } from "react";
 import MapaInteractivo from "./components/MapaInteractivo";
 import ModalReporte from "./components/ModalReporte";
 import LoginAdmin from "./components/LoginAdmin";
@@ -63,16 +63,20 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // CU-11: Parsear parámetros de URL para compartir vista del mapa
-  const urlParams = new URLSearchParams(window.location.search);
-  const compartirParams = urlParams.has('lat') ? {
-    lat: parseFloat(urlParams.get('lat')),
-    lng: parseFloat(urlParams.get('lng')),
-    zoom: parseInt(urlParams.get('zoom') || '13'),
-    filtro: urlParams.get('filtro') || 'todos'
-  } : null;
+  // CU-11: Parsear parámetros de URL una sola vez para mantener referencia estable
+  const compartirParams = useMemo(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.has("lat")
+      ? {
+          lat: parseFloat(urlParams.get("lat")),
+          lng: parseFloat(urlParams.get("lng")),
+          zoom: parseInt(urlParams.get("zoom") || "13"),
+          filtro: urlParams.get("filtro") || "todos",
+        }
+      : null;
+  }, []);
 
-  const manejarClickReportar = () => {
+  const manejarClickReportar = useCallback(() => {
     // Límites geográficos de Los Mochis y ejidos aledaños (~25km radio)
     const LIMITES = { latMin: 25.50, latMax: 26.10, lngMin: -109.30, lngMax: -108.70 };
     const centroLosMochis = [25.7904, -108.9858];
@@ -95,7 +99,7 @@ function App() {
             setModalAbierto(true);
           }
         },
-        (error) => {
+        () => {
           alert("No pudimos obtener tu ubicación. Haz clic en el mapa para seleccionar el punto del incidente.");
           setUbicacionUsuario(centroLosMochis);
           setModalAbierto(true);
@@ -106,14 +110,14 @@ function App() {
       setUbicacionUsuario(centroLosMochis);
       setModalAbierto(true);
     }
-  };
+  }, []);
 
-  const manejarClickMapa = (coordenadas) => {
+  const manejarClickMapa = useCallback((coordenadas) => {
     setUbicacionUsuario(coordenadas);
     setModalAbierto(true);
-  };
+  }, []);
 
-  const manejarEnvioReporte = async (datos) => {
+  const manejarEnvioReporte = useCallback(async (datos) => {
     try {
       const respuesta = await fetch(`${API_BASE_URL}/api/reportes`, {
         method: "POST",
@@ -130,24 +134,28 @@ function App() {
       } else {
         alert(resultado.error || "Hubo un problema al guardar el reporte.");
       }
-    } catch (error) {
+    } catch {
       alert("No se pudo conectar con el servidor.");
     }
-  };
+  }, []);
+
+  const cerrarModalReporte = useCallback(() => setModalAbierto(false), []);
+  const cerrarEmergencias = useCallback(() => setEmergenciasAbierto(false), []);
+  const cerrarAlertas = useCallback(() => setAlertasAbierto(false), []);
 
   // ── Callback de login exitoso: guarda el token JWT ──
-  const manejarLoginExitoso = (token) => {
+  const manejarLoginExitoso = useCallback((token) => {
     setTokenJWT(token);
     setAdminAutenticado(true);
-  };
+  }, []);
 
   // ── Cerrar sesión: limpiar token ──
-  const cerrarSesion = () => {
+  const cerrarSesion = useCallback(() => {
     setTokenJWT(null);
     setAdminAutenticado(false);
     window.history.pushState({}, '', '/');
     setVistaActual("mapa");
-  };
+  }, []);
 
   if (vistaActual === "admin") {
     if (!adminAutenticado) {
@@ -366,10 +374,10 @@ function App() {
         </button>
       </div>
 
-      <ModalReporte isOpen={modalAbierto} onClose={() => setModalAbierto(false)} onSubmit={manejarEnvioReporte} ubicacion={ubicacionUsuario} />
-      <DirectorioEmergencia isOpen={emergenciasAbierto} onClose={() => setEmergenciasAbierto(false)} />
+      <ModalReporte isOpen={modalAbierto} onClose={cerrarModalReporte} onSubmit={manejarEnvioReporte} ubicacion={ubicacionUsuario} />
+      <DirectorioEmergencia isOpen={emergenciasAbierto} onClose={cerrarEmergencias} />
       <Suspense fallback={null}>
-        <SuscripcionAlerta isOpen={alertasAbierto} onClose={() => setAlertasAbierto(false)} />
+        <SuscripcionAlerta isOpen={alertasAbierto} onClose={cerrarAlertas} />
       </Suspense>
     </div>
   );
