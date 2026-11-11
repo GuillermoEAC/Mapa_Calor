@@ -4,15 +4,16 @@ import { API_BASE_URL } from "../config";
 import MapaHistorico from "./MapaHistorico";
 
 const TIPOS_COLORES = {
-  "Robo / Asalto": { bg: "rgba(239, 68, 68, 0.15)", text: "#f87171", border: "rgba(239, 68, 68, 0.3)" },
-  "Vandalismo": { bg: "rgba(249, 115, 22, 0.15)", text: "#fb923c", border: "rgba(249, 115, 22, 0.3)" },
-  "Fallo de Alumbrado": { bg: "rgba(234, 179, 8, 0.15)", text: "#facc15", border: "rgba(234, 179, 8, 0.3)" },
-  "Actividad Sospechosa": { bg: "rgba(139, 92, 246, 0.15)", text: "#c084fc", border: "rgba(139, 92, 246, 0.3)" },
-  "Acoso / Zona Insegura": { bg: "rgba(236, 72, 153, 0.15)", text: "#f472b6", border: "rgba(236, 72, 153, 0.3)" },
-  "Fuga de Agua": { bg: "rgba(14, 165, 233, 0.15)", text: "#38bdf8", border: "rgba(14, 165, 233, 0.3)" },
-  "Accidente Vehicular": { bg: "rgba(6, 182, 212, 0.15)", text: "#22d3ee", border: "rgba(6, 182, 212, 0.3)" },
-  "Incendio / Maleza": { bg: "rgba(234, 88, 12, 0.15)", text: "#f97316", border: "rgba(234, 88, 12, 0.3)" },
-  "Fuga de Gas": { bg: "rgba(253, 224, 71, 0.15)", text: "#fef08a", border: "rgba(253, 224, 71, 0.3)" },
+  "Robo / Asalto": { bg: "rgba(239, 68, 68, 0.14)", text: "#ef4444", border: "rgba(239, 68, 68, 0.35)" },
+  "Vandalismo": { bg: "rgba(249, 115, 22, 0.14)", text: "#f97316", border: "rgba(249, 115, 22, 0.35)" },
+  "Fallo de Alumbrado": { bg: "rgba(234, 179, 8, 0.14)", text: "#eab308", border: "rgba(234, 179, 8, 0.35)" },
+  "Actividad Sospechosa": { bg: "rgba(139, 92, 246, 0.14)", text: "#a855f7", border: "rgba(139, 92, 246, 0.35)" },
+  "Acoso / Zona Insegura": { bg: "rgba(236, 72, 153, 0.14)", text: "#ec4899", border: "rgba(236, 72, 153, 0.35)" },
+  "Fuga de Agua": { bg: "rgba(14, 165, 233, 0.14)", text: "#0ea5e9", border: "rgba(14, 165, 233, 0.35)" },
+  "Accidente Vehicular": { bg: "rgba(6, 182, 212, 0.14)", text: "#06b6d4", border: "rgba(6, 182, 212, 0.35)" },
+  "Incendio / Maleza": { bg: "rgba(234, 88, 12, 0.14)", text: "#ea580c", border: "rgba(234, 88, 12, 0.35)" },
+  "Incendio / Quema": { bg: "rgba(234, 88, 12, 0.14)", text: "#ea580c", border: "rgba(234, 88, 12, 0.35)" },
+  "Fuga de Gas": { bg: "rgba(202, 138, 4, 0.14)", text: "#ca8a04", border: "rgba(202, 138, 4, 0.35)" },
 };
 
 const HistoricoReportes = ({ token }) => {
@@ -22,13 +23,19 @@ const HistoricoReportes = ({ token }) => {
   const [showMapa, setShowMapa] = useState(false);
   const [estadoFilter, setEstadoFilter] = useState("TODOS");
   const [tipoFilter, setTipoFilter] = useState("TODOS");
+  const [sinLimite, setSinLimite] = useState(true);
+  const [limiteVisible, setLimiteVisible] = useState(50);
 
   const cargarHistorico = async () => {
     setLoading(true);
     try {
-      const respuesta = await fetch(`${API_BASE_URL}/api/reportes/historico?estado=${estadoFilter}&tipo=${tipoFilter}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const paramLimite = sinLimite ? "todos" : "200";
+      const respuesta = await fetch(
+        `${API_BASE_URL}/api/reportes/historico?estado=${estadoFilter}&tipo=${tipoFilter}&limit=${paramLimite}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const datos = await respuesta.json();
       const lista = Array.isArray(datos)
         ? datos
@@ -45,8 +52,9 @@ const HistoricoReportes = ({ token }) => {
   };
 
   useEffect(() => {
+    setLimiteVisible(50);
     cargarHistorico();
-  }, [estadoFilter, tipoFilter]);
+  }, [estadoFilter, tipoFilter, sinLimite]);
 
   const reportesFiltrados = useMemo(() => {
     const lista = Array.isArray(reportes) ? reportes : [];
@@ -61,11 +69,11 @@ const HistoricoReportes = ({ token }) => {
   }, [reportes, busqueda]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
       <div
         className="admin-card"
         style={{
-          padding: "20px 24px",
+          padding: "18px 22px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -79,29 +87,29 @@ const HistoricoReportes = ({ token }) => {
               margin: 0,
               fontSize: "18px",
               fontWeight: 700,
-              color: "#ffffff",
+              color: "var(--adm-text)",
               display: "flex",
               alignItems: "center",
               gap: "10px",
             }}
           >
-            <History size={22} color="#38bdf8" />
-            <span>Base de Datos General</span>
+            <History size={20} color="var(--adm-accent)" />
+            <span>Base de Datos General ({reportesFiltrados.length})</span>
           </h2>
-          <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
-            Consulta de todos los reportes (Activos e Históricos).
+          <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--adm-muted)" }}>
+            Consulta de todos los reportes registrados (Activos e Históricos).
           </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
           <select
             value={estadoFilter}
             onChange={(e) => setEstadoFilter(e.target.value)}
             style={{
-              padding: "8px 14px", fontSize: "13px", borderRadius: "10px",
-              backgroundColor: "rgba(24, 24, 27, 0.8)", borderColor: "rgba(255, 255, 255, 0.1)",
-              color: "#f4f4f5", outline: "none", cursor: "pointer",
+              padding: "8px 14px",
+              fontSize: "13px",
+              borderRadius: "8px",
+              cursor: "pointer",
             }}
           >
             <option value="TODOS">Todos los Estados</option>
@@ -113,9 +121,11 @@ const HistoricoReportes = ({ token }) => {
             value={tipoFilter}
             onChange={(e) => setTipoFilter(e.target.value)}
             style={{
-              padding: "8px 14px", fontSize: "13px", borderRadius: "10px",
-              backgroundColor: "rgba(24, 24, 27, 0.8)", borderColor: "rgba(255, 255, 255, 0.1)",
-              color: "#f4f4f5", outline: "none", cursor: "pointer", maxWidth: "160px"
+              padding: "8px 14px",
+              fontSize: "13px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              maxWidth: "180px",
             }}
           >
             <option value="TODOS">Todos los Tipos</option>
@@ -129,6 +139,7 @@ const HistoricoReportes = ({ token }) => {
             <option value="8">Incendio / Maleza</option>
             <option value="9">Fuga de Gas</option>
           </select>
+
           <div style={{ position: "relative" }}>
             <div
               style={{
@@ -136,7 +147,7 @@ const HistoricoReportes = ({ token }) => {
                 left: "12px",
                 top: "50%",
                 transform: "translateY(-50%)",
-                color: "#71717a",
+                color: "var(--adm-muted)",
                 display: "flex",
                 pointerEvents: "none",
               }}
@@ -151,10 +162,8 @@ const HistoricoReportes = ({ token }) => {
               style={{
                 padding: "8px 14px 8px 36px",
                 fontSize: "13px",
-                borderRadius: "10px",
-                width: "220px",
-                backgroundColor: "rgba(24, 24, 27, 0.8)",
-                borderColor: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "8px",
+                width: "210px",
               }}
             />
           </div>
@@ -167,12 +176,12 @@ const HistoricoReportes = ({ token }) => {
               alignItems: "center",
               gap: "6px",
               padding: "8px 14px",
-              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "10px",
+              background: "#059669",
+              border: "1px solid #10b981",
+              borderRadius: "8px",
               color: "#ffffff",
               fontSize: "12.5px",
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: reportesFiltrados.length === 0 ? "not-allowed" : "pointer",
               opacity: reportesFiltrados.length === 0 ? 0.5 : 1,
             }}
@@ -189,12 +198,12 @@ const HistoricoReportes = ({ token }) => {
               alignItems: "center",
               gap: "6px",
               padding: "8px 14px",
-              background: "rgba(255, 255, 255, 0.05)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "10px",
-              color: "#f4f4f5",
+              background: "var(--adm-card-alt)",
+              border: "1px solid var(--adm-border)",
+              borderRadius: "8px",
+              color: "var(--adm-text)",
               fontSize: "12.5px",
-              fontWeight: 500,
+              fontWeight: 600,
               cursor: loading ? "wait" : "pointer",
             }}
           >
@@ -205,13 +214,13 @@ const HistoricoReportes = ({ token }) => {
       </div>
 
       {loading ? (
-        <div className="admin-card" style={{ padding: "60px 20px", textAlign: "center", color: "#a1a1aa" }}>
+        <div className="admin-card" style={{ padding: "60px 20px", textAlign: "center", color: "var(--adm-muted)" }}>
           <div
             style={{
               width: "28px",
               height: "28px",
-              border: "3px solid #27272a",
-              borderTop: "3px solid #38bdf8",
+              border: "3px solid var(--adm-border)",
+              borderTop: "3px solid var(--adm-accent)",
               borderRadius: "50%",
               animation: "spin 0.8s linear infinite",
               margin: "0 auto 14px auto",
@@ -220,12 +229,12 @@ const HistoricoReportes = ({ token }) => {
           <span style={{ fontSize: "14px" }}>Cargando registros...</span>
         </div>
       ) : reportesFiltrados.length === 0 ? (
-        <div className="admin-card" style={{ padding: "50px 20px", textAlign: "center", color: "#a1a1aa" }}>
-          <History size={36} color="#52525b" style={{ margin: "0 auto 12px auto" }} />
-          <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: "#f4f4f5" }}>
+        <div className="admin-card" style={{ padding: "50px 20px", textAlign: "center", color: "var(--adm-muted)" }}>
+          <History size={36} color="var(--adm-muted)" style={{ margin: "0 auto 12px auto" }} />
+          <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 700, color: "var(--adm-text)" }}>
             {busqueda ? "Sin coincidencias" : "No hay reportes archivados"}
           </h3>
-          <p style={{ margin: "6px 0 0 0", fontSize: "12.5px", color: "#71717a" }}>
+          <p style={{ margin: "6px 0 0 0", fontSize: "12.5px", color: "var(--adm-muted)" }}>
             {busqueda ? "Intenta con otro término." : "Intenta ajustando los filtros."}
           </p>
         </div>
@@ -244,26 +253,39 @@ const HistoricoReportes = ({ token }) => {
                 </tr>
               </thead>
               <tbody>
-                {reportesFiltrados.map((rep) => {
+                {reportesFiltrados.slice(0, limiteVisible).map((rep) => {
                   const estiloBadge = TIPOS_COLORES[rep.tipo_incidente] || {
-                    bg: "rgba(255, 255, 255, 0.08)",
-                    text: "#f4f4f5",
-                    border: "rgba(255, 255, 255, 0.15)",
+                    bg: "var(--adm-card-alt)",
+                    text: "var(--adm-text)",
+                    border: "var(--adm-border)",
                   };
 
                   return (
                     <tr key={rep.id_reporte}>
-                      <td style={{ color: "#71717a", fontFamily: "monospace", fontWeight: 600 }}>
+                      <td style={{ color: "var(--adm-muted)", fontFamily: "monospace", fontWeight: 700 }}>
                         #{rep.id_reporte}
                       </td>
                       <td>
-                        <span style={{
-                          padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600,
-                          backgroundColor: rep.estado === 'APROBADO' ? "rgba(16, 185, 129, 0.15)" : "rgba(113, 113, 122, 0.15)",
-                          color: rep.estado === 'APROBADO' ? "#34d399" : "#a1a1aa",
-                          border: `1px solid ${rep.estado === 'APROBADO' ? "rgba(16, 185, 129, 0.3)" : "rgba(113, 113, 122, 0.3)"}`
-                        }}>
-                          {rep.estado === 'APROBADO' ? 'ACTIVO' : 'HISTÓRICO'}
+                        <span
+                          className="admin-badge"
+                          style={{
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            backgroundColor:
+                              rep.estado === "APROBADO"
+                                ? "rgba(16, 185, 129, 0.15)"
+                                : "var(--adm-card-alt)",
+                            color: rep.estado === "APROBADO" ? "#10b981" : "var(--adm-muted)",
+                            border: `1px solid ${
+                              rep.estado === "APROBADO"
+                                ? "rgba(16, 185, 129, 0.35)"
+                                : "var(--adm-border)"
+                            }`,
+                          }}
+                        >
+                          {rep.estado === "APROBADO" ? "ACTIVO" : "HISTÓRICO"}
                         </span>
                       </td>
                       <td>
@@ -278,20 +300,20 @@ const HistoricoReportes = ({ token }) => {
                           {rep.tipo_incidente}
                         </span>
                       </td>
-                      <td style={{ maxWidth: "320px" }}>
+                      <td style={{ maxWidth: "340px" }}>
                         {rep.descripcion ? (
-                          <span style={{ color: "#e4e4e7", fontSize: "13px" }}>
+                          <span style={{ color: "var(--adm-text)", fontSize: "13px", fontWeight: 500 }}>
                             {rep.descripcion}
                           </span>
                         ) : (
-                          <span style={{ color: "#71717a", fontSize: "12px", fontStyle: "italic" }}>
+                          <span style={{ color: "var(--adm-muted)", fontSize: "12px", fontStyle: "italic" }}>
                             Sin descripción
                           </span>
                         )}
                       </td>
-                      <td style={{ whiteSpace: "nowrap", color: "#a1a1aa", fontSize: "12.5px" }}>
+                      <td style={{ whiteSpace: "nowrap", color: "var(--adm-muted)", fontSize: "12.5px", fontWeight: 500 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <Calendar size={13} color="#71717a" />
+                          <Calendar size={13} color="var(--adm-muted)" />
                           <span>{new Date(rep.fecha_registro).toLocaleDateString()}</span>
                         </div>
                       </td>
@@ -304,17 +326,20 @@ const HistoricoReportes = ({ token }) => {
                             display: "inline-flex",
                             alignItems: "center",
                             gap: "5px",
-                            color: "#38bdf8",
+                            color: "var(--adm-accent)",
                             fontSize: "12px",
+                            fontWeight: 600,
                             textDecoration: "none",
-                            background: "rgba(56, 189, 248, 0.08)",
+                            background: "var(--adm-accent-bg)",
                             padding: "4px 8px",
                             borderRadius: "6px",
-                            border: "1px solid rgba(56, 189, 248, 0.2)",
+                            border: "1px solid var(--adm-accent-border)",
                           }}
                         >
                           <MapPin size={12} />
-                          <span>{Number(rep.latitud).toFixed(4)}, {Number(rep.longitud).toFixed(4)}</span>
+                          <span>
+                            {Number(rep.latitud).toFixed(4)}, {Number(rep.longitud).toFixed(4)}
+                          </span>
                           <ExternalLink size={10} style={{ marginLeft: "2px" }} />
                         </a>
                       </td>
@@ -324,45 +349,93 @@ const HistoricoReportes = ({ token }) => {
               </tbody>
             </table>
           </div>
+          {reportesFiltrados.length > limiteVisible && (
+            <div style={{ padding: "12px", textAlign: "center", borderTop: "1px solid var(--adm-border)" }}>
+              <button
+                onClick={() => setLimiteVisible((prev) => prev + 50)}
+                style={{
+                  padding: "7px 16px",
+                  background: "var(--adm-accent-bg)",
+                  border: "1px solid var(--adm-accent-border)",
+                  borderRadius: "8px",
+                  color: "var(--adm-accent)",
+                  fontSize: "12.5px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Mostrar más ({reportesFiltrados.length - limiteVisible} restantes)
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* Modal para el Mapa Histórico */}
       {showMapa && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0, 0, 0, 0.75)",
-          backdropFilter: "blur(4px)",
-          zIndex: 9999,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          padding: "20px"
-        }}>
-          <div className="admin-card animate-modal" style={{
-            width: "100%", maxWidth: "1000px", height: "80vh",
-            display: "flex", flexDirection: "column",
-            overflow: "hidden"
-          }}>
-            <div style={{
-              padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)",
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              background: "rgba(24,24,27,0.95)"
-            }}>
-              <h3 style={{ margin: 0, fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <MapIcon size={18} color="#10b981" /> Mapa de Densidad Histórica
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(9, 13, 11, 0.85)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            className="admin-card"
+            style={{
+              width: "100%",
+              maxWidth: "1000px",
+              height: "80vh",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 20px",
+                borderBottom: "1px solid var(--adm-border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "var(--adm-sidebar)",
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: "15.5px", color: "var(--adm-text)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <MapIcon size={18} color="var(--adm-accent)" /> Mapa de Densidad Histórica
               </h3>
               <button
                 onClick={() => setShowMapa(false)}
                 style={{
-                  background: "rgba(255,255,255,0.05)", border: "none", color: "#a1a1aa",
-                  borderRadius: "8px", padding: "6px", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center"
+                  background: "var(--adm-card-alt)",
+                  border: "1px solid var(--adm-border)",
+                  color: "var(--adm-text)",
+                  borderRadius: "8px",
+                  padding: "6px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <X size={18} />
               </button>
             </div>
             <div style={{ flex: 1, position: "relative" }}>
-              <MapaHistorico reportes={reportesFiltrados} />
+              <MapaHistorico
+                reportes={reportesFiltrados}
+                sinLimite={sinLimite}
+                onToggleSinLimite={() => setSinLimite((prev) => !prev)}
+                cargando={loading}
+              />
             </div>
           </div>
         </div>

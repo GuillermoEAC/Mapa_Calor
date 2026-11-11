@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMapEvents, useMap, ZoomControl } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMapEvents, useMap } from "react-leaflet";
 import { Share2, X, User, SlidersHorizontal, Check, Calendar } from "lucide-react";
 import { API_BASE_URL } from "../config";
 import L from "leaflet";
@@ -45,11 +45,12 @@ const ESTILOS_MAPA = {
 };
 
 const HEAT_GRADIENT = {
-  0.10: "rgba(250, 204, 21, 0)",    // Desvanecimiento exterior suave
-  0.25: "rgba(250, 204, 21, 0.35)", // Halo ámbar tenue
-  0.45: "#eab308",                  // Amarillo cálido (Densidad baja-media)
-  0.65: "#f97316",                  // Naranja intenso (Densidad media-alta)
-  0.85: "#ef4444",                  // Rojo alerta (Densidad alta)
+  0.00: "rgba(250, 204, 21, 0)",
+  0.26: "rgba(250, 204, 21, 0)",    // Sub-puntos en segundo plano (100% invisibles por sí solos)
+  0.40: "rgba(250, 204, 21, 0.42)", // Halo ámbar tenue solo cuando se suman al punto central
+  0.58: "#eab308",                  // Amarillo cálido (Densidad baja-media)
+  0.75: "#f97316",                  // Naranja intenso (Densidad media-alta)
+  0.88: "#ef4444",                  // Rojo alerta (Densidad alta)
   1.00: "#7f1d1d",                  // Núcleo carmesí oscuro (Concentración crítica)
 };
 
@@ -57,10 +58,10 @@ const HEAT_GRADIENT = {
 const PESO_TERMICO_TIPO = {
   1: 0.85, // Robo / Asalto
   2: 0.55, // Vandalismo
-  3: 0.38, // Fallo de Alumbrado
-  4: 0.45, // Actividad Sospechosa
+  3: 0.42, // Fallo de Alumbrado
+  4: 0.48, // Actividad Sospechosa
   5: 0.80, // Acoso / Zona Insegura
-  6: 0.35, // Fuga de Agua
+  6: 0.40, // Fuga de Agua
   7: 0.65, // Accidente Vehicular
   8: 0.78, // Incendio / Quema
   9: 0.75, // Fuga de Gas
@@ -72,9 +73,9 @@ const MODOS_CALOR = {
   concentrado: { nombre: "Focos Concentrados", factorRadio: 0.65, factorBlur: 1.10, usarLobulos: false },
 };
 
-// Generador determinista de huella térmica asimétrica para romper los círculos perfectos
+// Generador determinista de huella térmica asimétrica (4 sub-nodos = 1 sola mancha sin separarse)
 const generarHuellaOrganica = (id, lat, lng, tipo) => {
-  const peso = PESO_TERMICO_TIPO[tipo] || 0.6;
+  const peso = PESO_TERMICO_TIPO[tipo] || 0.65;
   const seed = (Number(id) || 1) * 2654435761 + Math.round((lat + lng) * 100000);
 
   // Función pseudo-aleatoria determinista en rango [0, 1)
@@ -83,15 +84,16 @@ const generarHuellaOrganica = (id, lat, lng, tipo) => {
     return x - Math.floor(x);
   };
 
-  // Punto central + 3 lóbulos irregulares alrededor (~55m a ~165m en distintas direcciones)
+  // Punto central + 3 sub-puntos invisibles cercanos (~20m a ~50m) que se fusionan en 1
   const nodos = [[lat, lng, peso]];
   for (let k = 1; k <= 3; k++) {
     const angulo = rand(k) * Math.PI * 2;
-    const distGrados = 0.00045 + rand(k + 10) * 0.00105; // ~50m a ~165m
-    const elongacion = k === 1 ? 1.25 : 0.85;
+    const distGrados = 0.00018 + rand(k + 10) * 0.00030;
+    const elongacion = k === 1 ? 1.2 : 0.9;
     const dLat = Math.cos(angulo) * distGrados * elongacion;
     const dLng = Math.sin(angulo) * distGrados;
-    const subPeso = +(peso * (0.58 - k * 0.11)).toFixed(2);
+    // Peso bajo (<0.25) para que quede en segundo plano sin pintarse solo
+    const subPeso = +(Math.min(0.24, peso * (0.32 - k * 0.05))).toFixed(2);
     nodos.push([lat + dLat, lng + dLng, subPeso]);
   }
   return nodos;
@@ -319,26 +321,26 @@ const IncidenteMarker = memo(({ punto }) => {
                 <span style={{ display: "block", width: "10px", height: "10px", borderRadius: "50%", backgroundColor: infoTipo.color, boxShadow: `0 0 10px ${infoTipo.color}80` }}></span>
               </div>
               <div>
-                <h4 style={{ margin: 0, color: "#f8fafc", fontWeight: "700", fontSize: "15px", letterSpacing: "-0.3px", lineHeight: "1.2" }}>
+                <h4 style={{ margin: 0, color: "var(--adm-text)", fontWeight: "700", fontSize: "15px", letterSpacing: "-0.3px", lineHeight: "1.2" }}>
                   {infoTipo.nombre}
                 </h4>
-                <p style={{ margin: "4px 0 0 0", fontSize: "11.5px", color: "#94a3b8", fontWeight: "500" }}>
+                <p style={{ margin: "4px 0 0 0", fontSize: "11.5px", color: "var(--adm-muted)", fontWeight: "500" }}>
                   {punto.fechaStr}
                 </p>
               </div>
             </div>
             
-            <div style={{ width: "100%", height: "1px", background: "linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)", margin: "12px 0" }}></div>
+            <div style={{ width: "100%", height: "1px", background: "var(--adm-border)", margin: "12px 0" }}></div>
 
             {/* Body con la descripción (cargada bajo demanda) */}
             {cargandoDesc ? (
               <div style={{ padding: "10px", textAlign: "center" }}>
-                <span style={{ fontSize: "12px", color: "#94a3b8" }}>Cargando...</span>
+                <span style={{ fontSize: "12px", color: "var(--adm-muted)" }}>Cargando...</span>
               </div>
             ) : descripcion ? (
               <div style={{
-                background: "rgba(15, 23, 42, 0.4)",
-                border: "1px solid rgba(255,255,255,0.05)",
+                background: "var(--adm-card-alt)",
+                border: "1px solid var(--adm-border)",
                 borderRadius: "8px",
                 padding: "12px",
                 position: "relative"
@@ -346,7 +348,7 @@ const IncidenteMarker = memo(({ punto }) => {
                 <p style={{ 
                   margin: 0, 
                   fontSize: "13px", 
-                  color: "#e2e8f0", 
+                  color: "var(--adm-text)", 
                   lineHeight: "1.6",
                   position: "relative",
                   zIndex: 1,
@@ -356,8 +358,8 @@ const IncidenteMarker = memo(({ punto }) => {
                 </p>
               </div>
             ) : (
-              <div style={{ padding: "10px", background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
-                <p style={{ margin: 0, fontSize: "12px", color: "#64748b", fontStyle: "italic", textAlign: "center" }}>Sin descripción adicional</p>
+              <div style={{ padding: "10px", background: "var(--adm-card-alt)", borderRadius: "8px", border: "1px dashed var(--adm-border)" }}>
+                <p style={{ margin: 0, fontSize: "12px", color: "var(--adm-muted)", fontStyle: "italic", textAlign: "center" }}>Sin descripción adicional</p>
               </div>
             )}
           </div>
@@ -401,7 +403,8 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     }
   }, []);
   const [modoCalor, setModoCalor] = useState("organico");
-  const [configMapa, setConfigMapa] = useState({ radio_puntos: 500, desenfoque_puntos: 15, opacidad_puntos: 0.15 });
+  const [sinLimitePuntos, setSinLimitePuntos] = useState(false);
+  const [configMapa, setConfigMapa] = useState({ radio_puntos: 500, desenfoque_puntos: 15, opacidad_puntos: 0.02 });
   
   // ── OPTIMIZACIÓN: Usar refs en lugar de estado para la posición del mapa. 
   // Esto evita re-renderizar todo el árbol de marcadores cada vez que se mueve el mapa.
@@ -450,13 +453,16 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
       .catch(() => alert("No se pudo copiar el enlace."));
   }, [filtrosActivos]);
 
-  // ── Carga de datos (una sola vez) ──
+  // ── Carga de datos ──
   useEffect(() => {
     let cancelado = false;
     const cargarDatos = async () => {
       try {
+        const urlAprobados = sinLimitePuntos
+          ? `${API_BASE_URL}/api/reportes/aprobados?sinLimite=true`
+          : `${API_BASE_URL}/api/reportes/aprobados`;
         const [resPuntos, resConfig] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/reportes/aprobados`),
+          fetch(urlAprobados),
           fetch(`${API_BASE_URL}/api/config`),
         ]);
         if (cancelado) return;
@@ -495,7 +501,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     };
     cargarDatos();
     return () => { cancelado = true; };
-  }, []);
+  }, [sinLimitePuntos]);
 
   // ── Paso 1: Filtrar una sola vez por tiempo y calcular conteos por tipo al mismo tiempo ──
   const { puntosEnTiempo, conteoPorTipo } = useMemo(() => {
@@ -566,8 +572,8 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
   }, [configMapa.desenfoque_puntos, configModoCalor.factorBlur]);
 
   const heatOpacidad = useMemo(
-    () => (configMapa.opacidad_puntos ? parseFloat(configMapa.opacidad_puntos) : 0.15),
-    [configMapa.opacidad_puntos]
+    () => (modoCalor === "concentrado" && configMapa.opacidad_puntos ? parseFloat(configMapa.opacidad_puntos) : 0.02),
+    [configMapa.opacidad_puntos, modoCalor]
   );
 
   const todosActivos = filtrosActivos.size === 9;
@@ -583,8 +589,8 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
     <div style={{ position: "relative", height: "100%", width: "100%" }}>
       {/* ── Contador flotante de incidentes visibles ── */}
       <div className="glass-pill animate-fade-in hud-contador">
-        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8", flexShrink: 0 }} />
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{puntosFiltrados.length} {puntosFiltrados.length === 1 ? "incidente visible" : "incidentes visibles"}{textoTiempo}</span>
+        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--adm-accent)", flexShrink: 0 }} />
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", color: "var(--adm-text)" }}>{puntosFiltrados.length} {puntosFiltrados.length === 1 ? "incidente visible" : "incidentes visibles"}{textoTiempo}</span>
       </div>
 
       {/* ── Botón flotante para abrir Drawer de Filtros y Capas ── */}
@@ -592,7 +598,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         onClick={() => setDrawerAbierto(true)}
         className="btn-action glass-pill animate-fade-in hud-filtros"
       >
-        <SlidersHorizontal size={15} />
+        <SlidersHorizontal size={15} color="var(--adm-accent)" />
         Filtros<span className="hide-mobile">&nbsp;y Capas</span> ({filtrosActivos.size}/9)
       </button>
 
@@ -608,7 +614,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
               left: 0,
               width: "100%",
               height: "100%",
-              background: "rgba(0,0,0,0.5)",
+              background: "rgba(0,0,0,0.45)",
               zIndex: 1400,
             }}
           />
@@ -622,39 +628,40 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
               bottom: 0,
               width: "320px",
               maxWidth: "85vw",
-              background: "#18181b",
-              borderLeft: "1px solid rgba(255,255,255,0.12)",
-              boxShadow: "-10px 0 35px rgba(0,0,0,0.6)",
+              background: "var(--adm-sidebar)",
+              borderLeft: "1px solid var(--adm-border)",
+              boxShadow: "-10px 0 35px rgba(0,0,0,0.35)",
               zIndex: 1500,
               padding: "24px 20px",
               display: "flex",
               flexDirection: "column",
               gap: "20px",
               overflowY: "auto",
+              color: "var(--adm-text)",
             }}
           >
             {/* Header del drawer */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "12px", borderBottom: "1px solid var(--adm-border)" }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#f8fafc", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <SlidersHorizontal size={18} color="#38bdf8" /> Filtros y Capas
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "var(--adm-text)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <SlidersHorizontal size={18} color="var(--adm-accent)" /> Filtros y Capas
                 </h3>
-                <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#94a3b8" }}>
+                <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "var(--adm-muted)" }}>
                   Personaliza los incidentes en el mapa
                 </p>
               </div>
               <button
                 onClick={() => setDrawerAbierto(false)}
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "none",
+                  background: "var(--adm-card-alt)",
+                  border: "1px solid var(--adm-border)",
                   borderRadius: "8px",
                   width: "32px",
                   height: "32px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#94a3b8",
+                  color: "var(--adm-muted)",
                   cursor: "pointer",
                 }}
               >
@@ -665,7 +672,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
             {/* Sección incidentes */}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--adm-muted)" }}>
                   Tipos de Incidentes
                 </span>
                 <button
@@ -673,9 +680,9 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                   style={{
                     background: "transparent",
                     border: "none",
-                    color: "#38bdf8",
+                    color: "var(--adm-accent)",
                     fontSize: "12px",
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: "pointer",
                     padding: 0,
                   }}
@@ -698,20 +705,20 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                         justifyContent: "space-between",
                         padding: "10px 14px",
                         borderRadius: "10px",
-                        background: activo ? "rgba(255, 255, 255, 0.05)" : "transparent",
-                        border: `1px solid ${activo ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.05)"}`,
+                        background: activo ? "var(--adm-card)" : "transparent",
+                        border: `1px solid ${activo ? "var(--adm-border)" : "var(--adm-border-subtle)"}`,
                         cursor: "pointer",
                         transition: "all 0.15s ease",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: info.color }} />
-                        <span style={{ fontSize: "13px", fontWeight: 600, color: activo ? "#f4f4f5" : "#71717a" }}>
+                        <span style={{ fontSize: "13px", fontWeight: 600, color: activo ? "var(--adm-text)" : "var(--adm-muted)" }}>
                           {info.nombre}
                         </span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", background: "rgba(255,255,255,0.06)", padding: "2px 7px", borderRadius: "10px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--adm-muted)", background: "var(--adm-card-alt)", padding: "2px 7px", borderRadius: "10px" }}>
                           {count}
                         </span>
                         <div
@@ -719,14 +726,14 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                             width: "18px",
                             height: "18px",
                             borderRadius: "4px",
-                            border: `1.5px solid ${activo ? "#38bdf8" : "#52525b"}`,
-                            background: activo ? "#38bdf8" : "transparent",
+                            border: `1.5px solid ${activo ? "var(--adm-accent)" : "var(--adm-border)"}`,
+                            background: activo ? "var(--adm-accent)" : "transparent",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                           }}
                         >
-                          {activo && <Check size={13} color="#09090b" strokeWidth={3} />}
+                          {activo && <Check size={13} color="#ffffff" strokeWidth={3} />}
                         </div>
                       </div>
                     </div>
@@ -738,8 +745,8 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
             {/* Sección: Período de Tiempo */}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Calendar size={13} color="#38bdf8" /> Rango Temporal
+                <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--adm-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Calendar size={13} color="var(--adm-accent)" /> Rango Temporal
                 </span>
                 {filtroTiempo !== "anio" && (
                   <button
@@ -747,9 +754,9 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                     style={{
                       background: "transparent",
                       border: "none",
-                      color: "#38bdf8",
+                      color: "var(--adm-accent)",
                       fontSize: "11px",
-                      fontWeight: 600,
+                      fontWeight: 700,
                       cursor: "pointer",
                       padding: 0,
                     }}
@@ -774,9 +781,9 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                       style={{
                         padding: "8px 10px",
                         borderRadius: "8px",
-                        background: activo ? "rgba(56, 189, 248, 0.14)" : "rgba(255, 255, 255, 0.03)",
-                        border: `1px solid ${activo ? "#38bdf8" : "rgba(255, 255, 255, 0.06)"}`,
-                        color: activo ? "#38bdf8" : "#94a3b8",
+                        background: activo ? "var(--adm-accent-bg)" : "var(--adm-card)",
+                        border: `1px solid ${activo ? "var(--adm-accent-border)" : "var(--adm-border)"}`,
+                        color: activo ? "var(--adm-accent)" : "var(--adm-muted)",
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "flex-start",
@@ -786,10 +793,10 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                         textAlign: "left",
                       }}
                     >
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: activo ? "#38bdf8" : "#f4f4f5" }}>
+                      <span style={{ fontSize: "12px", fontWeight: 700, color: activo ? "var(--adm-accent)" : "var(--adm-text)" }}>
                         {item.label}
                       </span>
-                      <span style={{ fontSize: "10px", color: activo ? "#7dd3fc" : "#71717a" }}>
+                      <span style={{ fontSize: "10px", color: "var(--adm-muted)" }}>
                         {item.sub}
                       </span>
                     </button>
@@ -800,9 +807,27 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
 
             {/* Sección: Modo de dispersión térmica */}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
-              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa" }}>
-                Forma del Mapa de Calor
-              </span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--adm-muted)" }}>
+                  Forma del Mapa de Calor
+                </span>
+                <button
+                  onClick={() => setSinLimitePuntos((prev) => !prev)}
+                  style={{
+                    padding: "4px 9px",
+                    borderRadius: "6px",
+                    background: sinLimitePuntos ? "var(--adm-accent-bg)" : "var(--adm-card)",
+                    border: `1px solid ${sinLimitePuntos ? "var(--adm-accent-border)" : "var(--adm-border)"}`,
+                    color: sinLimitePuntos ? "var(--adm-accent)" : "var(--adm-muted)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                  title="Mostrar todos los reportes aprobados sin el límite de 500"
+                >
+                  {sinLimitePuntos ? "✓ Sin límite activo" : "Sin límite de puntos"}
+                </button>
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {Object.entries(MODOS_CALOR).map(([id, info]) => {
                   const seleccionado = modoCalor === id;
@@ -816,9 +841,9 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                         justifyContent: "space-between",
                         padding: "9px 12px",
                         borderRadius: "8px",
-                        background: seleccionado ? "rgba(56, 189, 248, 0.12)" : "rgba(255,255,255,0.02)",
-                        border: `1px solid ${seleccionado ? "#38bdf8" : "rgba(255,255,255,0.05)"}`,
-                        color: seleccionado ? "#38bdf8" : "#a1a1aa",
+                        background: seleccionado ? "var(--adm-accent-bg)" : "var(--adm-card)",
+                        border: `1px solid ${seleccionado ? "var(--adm-accent-border)" : "var(--adm-border)"}`,
+                        color: seleccionado ? "var(--adm-accent)" : "var(--adm-text)",
                         fontSize: "12.5px",
                         fontWeight: 600,
                         cursor: "pointer",
@@ -826,7 +851,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                       }}
                     >
                       <span>{info.nombre}</span>
-                      {seleccionado && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#38bdf8" }} />}
+                      {seleccionado && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--adm-accent)" }} />}
                     </button>
                   );
                 })}
@@ -835,7 +860,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
 
             {/* Sección estilos de mapa */}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "6px" }}>
-              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#a1a1aa" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--adm-muted)" }}>
                 Estilo del Mapa Base
               </span>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -851,9 +876,9 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                         justifyContent: "space-between",
                         padding: "9px 12px",
                         borderRadius: "8px",
-                        background: seleccionado ? "rgba(56, 189, 248, 0.12)" : "rgba(255,255,255,0.02)",
-                        border: `1px solid ${seleccionado ? "#38bdf8" : "rgba(255,255,255,0.05)"}`,
-                        color: seleccionado ? "#38bdf8" : "#a1a1aa",
+                        background: seleccionado ? "var(--adm-accent-bg)" : "var(--adm-card)",
+                        border: `1px solid ${seleccionado ? "var(--adm-accent-border)" : "var(--adm-border)"}`,
+                        color: seleccionado ? "var(--adm-accent)" : "var(--adm-text)",
                         fontSize: "12.5px",
                         fontWeight: 600,
                         cursor: "pointer",
@@ -861,7 +886,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                       }}
                     >
                       <span>{info.nombre}</span>
-                      {seleccionado && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#38bdf8" }} />}
+                      {seleccionado && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--adm-accent)" }} />}
                     </button>
                   );
                 })}
@@ -882,8 +907,8 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
         className={estiloMapaActivo === "oscuro" ? "mapa-modo-oscuro" : ""}
         preferCanvas={true}
         zoomControl={false}
+        attributionControl={false}
       >
-        <ZoomControl position="bottomright" />
         <MapRefRegister setMap={registrarMapa} />
         <DarkModeManager isDark={estiloMapaActivo === "oscuro"} />
         <TileLayer

@@ -132,24 +132,31 @@ const actualizarEstado = async (req, res) => {
 
 const obtenerAprobados = async (req, res) => {
   try {
+    const sinLimite = req.query.sinLimite === "true" || req.query.limit === "todos";
     const ahora = Date.now();
-    if (aprobadosCache && ahora - aprobadosCacheTime < APROBADOS_TTL_MS) {
+    if (!sinLimite && aprobadosCache && ahora - aprobadosCacheTime < APROBADOS_TTL_MS) {
       res.set("Cache-Control", "public, max-age=30");
       return res.json(aprobadosCache);
     }
 
     // Solo campos necesarios para el mapa de calor (sin descripcion para ahorrar bytes)
-    // LIMIT 500 como seguro: la depuración automática ya mantiene ~30 días de datos
-    const [reportes] = await pool.query(`
-      SELECT id_reporte, latitud, longitud, id_tipo, fecha_registro
-      FROM Reporte
-      WHERE estado = 'APROBADO'
-      ORDER BY fecha_registro DESC
-      LIMIT 500
-    `);
+    const sql = sinLimite
+      ? `SELECT id_reporte, latitud, longitud, id_tipo, fecha_registro
+         FROM Reporte
+         WHERE estado = 'APROBADO'
+         ORDER BY fecha_registro DESC`
+      : `SELECT id_reporte, latitud, longitud, id_tipo, fecha_registro
+         FROM Reporte
+         WHERE estado = 'APROBADO'
+         ORDER BY fecha_registro DESC
+         LIMIT 500`;
 
-    aprobadosCache = reportes;
-    aprobadosCacheTime = ahora;
+    const [reportes] = await pool.query(sql);
+
+    if (!sinLimite) {
+      aprobadosCache = reportes;
+      aprobadosCacheTime = ahora;
+    }
 
     res.set("Cache-Control", "public, max-age=30");
     res.json(reportes);
@@ -223,34 +230,96 @@ const obtenerEstadisticas = async (req, res) => {
     filtroFecha = "AND r.fecha_registro >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
   }
 
+  const formatoPeriodo = (rango === "dia" || rango === "semana" || rango === "mes") ? "%Y-%m-%d" : "%Y-%m";
+
   try {
-    // Ejecutar ambas queries en paralelo con el filtro de fecha
-    const [porTipoResult, porHoraResult] = await Promise.all([
+    // Ejecutar todas las consultas analíticas en paralelo
+    const [
+      porTipoResult,
+      porHoraResult,
+      porDiaSemanaResult,
+      porPeriodoResult,
+      porEstadoResult,
+      porSectorResult,
+    ] = await Promise.all([
       pool.query(`
-        SELECT t.nombre, COUNT(r.id_reporte) as total
+        SELECT t.id_tipo, t.nombre, COUNT(r.id_reporte) as total
         FROM Reporte r
         JOIN Tipo_Incidente t ON r.id_tipo = t.id_tipo
         WHERE r.estado IN ('APROBADO', 'HISTORICO')
         ${filtroFecha}
-        GROUP BY t.nombre
+        GROUP BY t.id_tipo, t.nombre
+        ORDER BY total DESC
       `),
       pool.query(`
         SELECT HOUR(r.fecha_registro) as hora, COUNT(*) as total
         FROM Reporte r
         WHERE r.estado IN ('APROBADO', 'HISTORICO')
         ${filtroFecha}
-        GROUP BY hora
+        GROUP BY HOUR(r.fecha_registro)
         ORDER BY hora
-      `)
+      `),
+      pool.query(`
+        SELECT DAYOFWEEK(r.fecha_registro) as dia_num, COUNT(*) as total
+        FROM Reporte r
+        WHERE r.estado IN ('APROBADO', 'HISTORICO')
+        ${filtroFecha}
+        GROUP BY DAYOFWEEK(r.fecha_registro)
+        ORDER BY dia_num
+      `),
+      pool.query(`
+        SELECT DATE_FORMAT(r.fecha_registro, '${formatoPeriodo}') as periodo, COUNT(*) as total
+        FROM Reporte r
+        WHERE r.estado IN ('APROBADO', 'HISTORICO')
+        ${filtroFecha}
+        GROUP BY DATE_FORMAT(r.fecha_registro, '${formatoPeriodo}')
+        ORDER BY periodo ASC
+      `),
+      pool.query(`
+        SELECT r.estado, COUNT(*) as total
+        FROM Reporte r
+        WHERE 1=1
+        ${filtroFecha}
+        GROUP BY r.estado
+      `),
+      pool.query(`
+        SELECT sector, COUNT(*) as total
+        FROM (
+          SELECT
+            CASE
+              WHEN ABS(r.latitud - 25.7904) < 0.012 AND ABS(r.longitud - (-108.9858)) < 0.012 THEN 'Centro'
+              WHEN (r.latitud - 25.7904) >= ABS(r.longitud - (-108.9858)) THEN 'Norte'
+              WHEN (25.7904 - r.latitud) >= ABS(r.longitud - (-108.9858)) THEN 'Sur'
+              WHEN (r.longitud - (-108.9858)) > 0 THEN 'Oriente'
+              ELSE 'Poniente'
+            END as sector
+          FROM Reporte r
+          WHERE r.estado IN ('APROBADO', 'HISTORICO')
+          ${filtroFecha}
+        ) as sub_sectores
+        GROUP BY sector
+      `),
     ]);
 
     const porTipo = porTipoResult[0];
     const porHora = porHoraResult[0];
+    const porDiaSemana = porDiaSemanaResult[0];
+    const porPeriodo = porPeriodoResult[0];
+    const porEstado = porEstadoResult[0];
+    const porSector = porSectorResult[0];
 
-    // Cache: estadísticas pueden cachearse 5 min
-    res.set("Cache-Control", "public, max-age=300");
-    res.json({ porTipo, porHora });
+    // Cache: estadísticas pueden cachearse 2 min
+    res.set("Cache-Control", "public, max-age=120");
+    res.json({
+      porTipo,
+      porHora,
+      porDiaSemana,
+      porPeriodo,
+      porEstado,
+      porSector,
+    });
   } catch (error) {
+    console.error("[Estadísticas] Error:", error);
     res.status(500).json({ error: "Error al generar estadísticas" });
   }
 };
@@ -283,9 +352,10 @@ const depurarReportesAntiguos = async (req, res) => {
 
 const obtenerHistorico = async (req, res) => {
   // Paginación y Filtros
+  const sinLimite = req.query.limit === "todos" || req.query.limit === "0" || req.query.sinLimite === "true";
   const page = Math.max(1, parseInt(req.query.page) || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
-  const offset = (page - 1) * limit;
+  const limit = sinLimite ? 100000 : Math.min(5000, Math.max(1, parseInt(req.query.limit) || 200));
+  const offset = sinLimite ? 0 : (page - 1) * limit;
   
   const { tipo, estado, desde, hasta } = req.query;
 
@@ -317,7 +387,7 @@ const obtenerHistorico = async (req, res) => {
     // Ejecutar listado paginado y conteo en paralelo
     const [[reportes], [[{ total }]]] = await Promise.all([
       pool.query(`
-        SELECT r.id_reporte, r.latitud, r.longitud, r.fecha_registro, r.descripcion, r.estado, t.nombre AS tipo_incidente
+        SELECT r.id_reporte, r.id_tipo, r.latitud, r.longitud, r.fecha_registro, r.descripcion, r.estado, t.nombre AS tipo_incidente
         FROM Reporte r
         JOIN Tipo_Incidente t ON r.id_tipo = t.id_tipo
         ${whereString}

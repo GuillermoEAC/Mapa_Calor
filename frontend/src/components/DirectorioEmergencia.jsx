@@ -47,7 +47,10 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
           maxWidth: "460px",
           padding: "28px",
           position: "relative",
-          borderRadius: "22px",
+          borderRadius: "16px",
+          background: "var(--adm-card)",
+          border: "1px solid var(--adm-border)",
+          color: "var(--adm-text)",
         }}
       >
         {/* Encabezado */}
@@ -57,7 +60,7 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
             display: "flex", 
             alignItems: "center", 
             gap: "12px", 
-            color: "#f8fafc",
+            color: "var(--adm-text)",
             fontSize: "21px",
             fontWeight: 800,
             letterSpacing: "-0.5px"
@@ -79,19 +82,17 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
           <button 
             onClick={onClose} 
             style={{ 
-              background: "rgba(255, 255, 255, 0.05)", 
-              border: "1px solid rgba(255, 255, 255, 0.1)", 
-              borderRadius: "10px",
+              background: "var(--adm-card-alt)", 
+              border: "1px solid var(--adm-border)", 
+              borderRadius: "8px",
               cursor: "pointer", 
-              color: "#94a3b8",
+              color: "var(--adm-muted)",
               width: "32px",
               height: "32px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center"
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"; }}
           >
             <X size={18} />
           </button>
@@ -108,32 +109,20 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "16px 20px",
-                background: "rgba(30, 41, 59, 0.45)",
-                border: "1px solid rgba(255, 255, 255, 0.05)",
-                borderRadius: "14px",
+                background: "var(--adm-card-alt)",
+                border: "1px solid var(--adm-border)",
+                borderRadius: "12px",
                 textDecoration: "none",
-                color: "#f8fafc",
-                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.background = "rgba(30, 41, 59, 0.7)";
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.15)";
-                e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.3)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.background = "rgba(30, 41, 59, 0.45)";
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.05)";
-                e.currentTarget.style.boxShadow = "none";
+                color: "var(--adm-text)",
+                transition: "all 0.2s ease"
               }}
             >
               <div>
-                <div style={{ fontWeight: "600", fontSize: "15px", color: "#e2e8f0" }}>{contacto.institucion}</div>
-                <div style={{ color: "#3b82f6", fontWeight: "800", fontSize: "20px", marginTop: "4px", letterSpacing: "0.5px" }}>{contacto.numero}</div>
+                <div style={{ fontWeight: "700", fontSize: "15px", color: "var(--adm-text)" }}>{contacto.institucion}</div>
+                <div style={{ color: "var(--adm-accent)", fontWeight: "800", fontSize: "20px", marginTop: "4px", letterSpacing: "0.5px" }}>{contacto.numero}</div>
               </div>
               <div style={{ 
-                background: "#3b82f6", 
+                background: "#059669", 
                 width: "42px",
                 height: "42px",
                 borderRadius: "8px", 
@@ -148,7 +137,7 @@ const DirectorioEmergencia = ({ isOpen, onClose }) => {
           ))}
         </div>
 
-        <p style={{ marginTop: "24px", fontSize: "12.5px", color: "#64748b", textAlign: "center", lineHeight: "1.5" }}>
+        <p style={{ marginTop: "24px", fontSize: "12.5px", color: "var(--adm-muted)", textAlign: "center", lineHeight: "1.5" }}>
           Haz clic en cualquier contacto para realizar la llamada de forma directa desde tu dispositivo móvil.
         </p>
       </div>

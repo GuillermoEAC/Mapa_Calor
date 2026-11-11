@@ -3,7 +3,7 @@ import MapaInteractivo from "./components/MapaInteractivo";
 import ModalReporte from "./components/ModalReporte";
 import LoginAdmin from "./components/LoginAdmin";
 import DirectorioEmergencia from "./components/DirectorioEmergencia";
-import { Shield, AlertTriangle, ArrowLeft, BarChart3, Settings, PhoneCall, ListFilter, History, Bell, Download, LogOut } from "lucide-react";
+import { Shield, AlertTriangle, ArrowLeft, BarChart3, Settings, PhoneCall, ListFilter, History, Bell, Download, LogOut, Moon, Sun } from "lucide-react";
 import { API_BASE_URL } from "./config";
 
 // ── Lazy loading: componentes del admin solo se cargan si el usuario accede a /admin ──
@@ -47,8 +47,22 @@ function App() {
     window.location.pathname === "/admin" ? "admin" : "mapa"
   ); // mapa, admin
   const [seccionAdmin, setSeccionAdmin] = useState("moderacion"); // moderacion, estadisticas, config, historico, exportar
+  const [temaAdmin, setTemaAdmin] = useState(() => {
+    const guardado = localStorage.getItem("tema_admin");
+    return guardado === "claro" ? "claro" : "noche";
+  });
   const [adminAutenticado, setAdminAutenticado] = useState(false);
   const [tokenJWT, setTokenJWT] = useState(null);
+
+  // Sincronizar el tema (Noche Oliva / Modo Claro) en todo el sistema (:root)
+  React.useEffect(() => {
+    document.documentElement.setAttribute("data-tema", temaAdmin);
+    localStorage.setItem("tema_admin", temaAdmin);
+  }, [temaAdmin]);
+
+  const cambiarTemaGlobal = useCallback((nuevoTema) => {
+    setTemaAdmin(nuevoTema);
+  }, []);
 
   // Acceso rápido de administrador mediante combinación de teclas (Ctrl + Alt + A)
   React.useEffect(() => {
@@ -68,11 +82,11 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.has("lat")
       ? {
-          lat: parseFloat(urlParams.get("lat")),
-          lng: parseFloat(urlParams.get("lng")),
-          zoom: parseInt(urlParams.get("zoom") || "13"),
-          filtro: urlParams.get("filtro") || "todos",
-        }
+        lat: parseFloat(urlParams.get("lat")),
+        lng: parseFloat(urlParams.get("lng")),
+        zoom: parseInt(urlParams.get("zoom") || "13"),
+        filtro: urlParams.get("filtro") || "todos",
+      }
       : null;
   }, []);
 
@@ -85,7 +99,7 @@ function App() {
       navigator.geolocation.getCurrentPosition(
         (posicion) => {
           const { latitude, longitude } = posicion.coords;
-          
+
           // Si el GPS está fuera de cobertura, usar el centro del mapa
           if (
             latitude < LIMITES.latMin || latitude > LIMITES.latMax ||
@@ -167,130 +181,232 @@ function App() {
       );
     }
 
+    const SECCIONES_ADMIN = [
+      { id: "moderacion", label: "Moderación", desc: "Revisión y validación de reportes entrantes", icon: ListFilter },
+      { id: "estadisticas", label: "Estadísticas", desc: "Métricas operativas y patrones de incidencia", icon: BarChart3 },
+      { id: "historico", label: "Historial", desc: "Archivo general y mapa de densidad histórica", icon: History },
+      { id: "config", label: "Configuración", desc: "Parámetros técnicos del mapa de calor", icon: Settings },
+      { id: "exportar", label: "Exportar CSV", desc: "Descarga de registros para hojas de cálculo", icon: Download },
+    ];
+    const MODOS_APARIENCIA = [
+      { id: "noche", icon: Moon },
+      { id: "claro", icon: Sun },
+    ];
+    const infoSeccion = SECCIONES_ADMIN.find((s) => s.id === seccionAdmin) || SECCIONES_ADMIN[0];
+
+    const cambiarTemaAdmin = cambiarTemaGlobal;
+
     return (
-      <div style={{ height: "100%", width: "100%", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-deep)" }}>
-        <header
-          style={{
-            margin: "14px 18px 0 18px",
-            padding: "12px 20px",
-            background: "rgba(24, 24, 27, 0.95)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            borderRadius: "16px",
-            boxShadow: "0 8px 30px rgba(0, 0, 0, 0.4)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          {/* Logo y Volver */}
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <button 
-              onClick={() => { window.history.pushState({}, '', '/'); setVistaActual("mapa"); }} 
-              className="btn-action"
+      <div className="admin-layout" data-tema={temaAdmin}>
+        {/* Área principal a la izquierda */}
+        <div className="admin-main-wrap">
+          <header className="admin-topbar">
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--adm-text)" }}>
+                {infoSeccion.label}
+              </span>
+              <span style={{ color: "var(--adm-border)" }}>/</span>
+              <span style={{ fontSize: "12.5px", color: "var(--adm-muted)" }}>
+                {infoSeccion.desc}
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "var(--adm-muted)" }}>
+              <span
+                style={{
+                  width: "7px",
+                  height: "7px",
+                  borderRadius: "50%",
+                  backgroundColor: "var(--adm-accent)",
+                  display: "inline-block",
+                }}
+              />
+              <span>Panel de Control Activo</span>
+            </div>
+          </header>
+
+          <main className="admin-content-scroll">
+            <div className="animate-fade-in" style={{ maxWidth: "1520px", margin: "0 auto" }}>
+              <Suspense fallback={<LoadingSpinner />}>
+                {seccionAdmin === "moderacion" && <PanelAdmin token={tokenJWT} />}
+                {seccionAdmin === "estadisticas" && <Estadisticas token={tokenJWT} />}
+                {seccionAdmin === "config" && <ConfiguracionMapa token={tokenJWT} />}
+                {seccionAdmin === "historico" && <HistoricoReportes token={tokenJWT} />}
+                {seccionAdmin === "exportar" && <ExportarReportes token={tokenJWT} />}
+              </Suspense>
+            </div>
+          </main>
+        </div>
+
+        {/* Menú lateral a la DERECHA (igual que el menú del mapa principal) */}
+        <aside className="admin-sidebar">
+          <div>
+            {/* Cabecera del Menú Derecho */}
+            <div
               style={{
-                padding: "8px 14px",
-                fontSize: "12.5px",
-                borderRadius: "10px",
-                gap: "6px",
-                background: "rgba(255, 255, 255, 0.04)",
-                borderColor: "rgba(255, 255, 255, 0.08)",
+                padding: "16px 16px 14px 16px",
+                borderBottom: "1px solid var(--adm-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "10px",
               }}
             >
-              <ArrowLeft size={15} /> Volver al Mapa
-            </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div
+                  style={{
+                    width: "30px",
+                    height: "30px",
+                    borderRadius: "6px",
+                    background: "var(--adm-accent-bg)",
+                    border: "1px solid var(--adm-accent-border)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--adm-accent)",
+                  }}
+                >
+                  <Shield size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--adm-text)", lineHeight: 1.2 }}>
+                    Administración
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--adm-muted)" }}>
+                    Los Mochis • Monitoreo
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <div style={{ height: "20px", width: "1px", background: "rgba(255,255,255,0.1)" }} />
+            {/* Navegación principal */}
+            <div style={{ padding: "14px 10px 6px 10px" }}>
+              <div
+                style={{
+                  fontSize: "10.5px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.6px",
+                  color: "var(--adm-muted)",
+                  padding: "0 8px 8px 8px",
+                }}
+              >
+                Secciones
+              </div>
+              <nav className="admin-sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                {SECCIONES_ADMIN.map((tab) => {
+                  const activo = seccionAdmin === tab.id;
+                  const IconComponent = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setSeccionAdmin(tab.id)}
+                      className={`admin-nav-btn ${activo ? "activo" : ""}`}
+                    >
+                      <IconComponent size={15} color={activo ? "var(--adm-accent)" : "var(--adm-muted)"} />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
 
-            {/* Navegación pestañas */}
-            <nav style={{ display: "flex", gap: "6px" }}>
-              {[
-                { id: "moderacion", label: "Moderación", icon: ListFilter },
-                { id: "estadisticas", label: "Estadísticas", icon: BarChart3 },
-                { id: "config", label: "Configuración", icon: Settings },
-                { id: "historico", label: "Historial", icon: History },
-                { id: "exportar", label: "Exportar", icon: Download },
-              ].map((tab) => {
-                const activo = seccionAdmin === tab.id;
-                const IconComponent = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setSeccionAdmin(tab.id)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "7px",
-                      padding: "8px 14px",
-                      borderRadius: "10px",
-                      fontSize: "13px",
-                      fontWeight: activo ? 600 : 500,
-                      cursor: "pointer",
-                      border: activo ? "1px solid rgba(56, 189, 248, 0.4)" : "1px solid transparent",
-                      background: activo
-                        ? "linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%)"
-                        : "transparent",
-                      color: activo ? "#38bdf8" : "#a1a1aa",
-                      boxShadow: activo ? "0 0 15px rgba(56, 189, 248, 0.15)" : "none",
-                      transition: "all 0.18s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!activo) e.currentTarget.style.color = "#f4f4f5";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!activo) e.currentTarget.style.color = "#a1a1aa";
-                    }}
-                  >
-                    <IconComponent size={15} />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
+            {/* Selector de Apariencia: Noche (Oliva) / Modo Claro */}
+            <div style={{ padding: "14px 12px 6px 12px" }}>
+              <div
+                style={{
+                  fontSize: "10.5px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.6px",
+                  color: "var(--adm-muted)",
+                  marginBottom: "8px",
+                  paddingLeft: "4px",
+                }}
+              >
+                Apariencia
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "6px",
+                  background: "var(--adm-bg)",
+                  padding: "4px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--adm-border)",
+                }}
+              >
+                {MODOS_APARIENCIA.map((m) => {
+                  const esActivo = temaAdmin === m.id;
+                  const IconoModo = m.icon;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => cambiarTemaAdmin(m.id)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                        padding: "7px 8px",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        fontWeight: esActivo ? 700 : 500,
+                        cursor: "pointer",
+                        background: esActivo ? "var(--adm-accent-bg)" : "transparent",
+                        color: esActivo ? "var(--adm-accent)" : "var(--adm-muted)",
+                        border: esActivo
+                          ? "1px solid var(--adm-accent-border)"
+                          : "1px solid transparent",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <IconoModo size={13} />
+                      <span>{m.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Botón Cerrar Sesión */}
-          <button 
-            onClick={cerrarSesion} 
+          {/* Pie del Menú Derecho: Volver al mapa y Cerrar sesión */}
+          <div
             style={{
+              padding: "12px 10px",
+              borderTop: "1px solid var(--adm-border)",
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
               gap: "6px",
-              padding: "8px 14px",
-              borderRadius: "10px",
-              fontSize: "12.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-              background: "rgba(244, 63, 94, 0.12)",
-              border: "1px solid rgba(244, 63, 94, 0.25)",
-              color: "#fb7185",
-              transition: "all 0.18s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(244, 63, 94, 0.22)";
-              e.currentTarget.style.color = "#f43f5e";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(244, 63, 94, 0.12)";
-              e.currentTarget.style.color = "#fb7185";
             }}
           >
-            <LogOut size={14} />
-            <span>Cerrar Sesión</span>
-          </button>
-        </header>
+            <button
+              onClick={() => {
+                window.history.pushState({}, "", "/");
+                setVistaActual("mapa");
+              }}
+              className="admin-nav-btn"
+              style={{
+                color: "var(--adm-text)",
+                backgroundColor: "var(--adm-card)",
+                borderColor: "var(--adm-border)",
+                fontWeight: 600,
+              }}
+            >
+              <ArrowLeft size={15} color="var(--adm-accent)" />
+              <span>Volver al Mapa</span>
+            </button>
 
-        <main style={{ flex: 1, overflowY: "auto", padding: "18px 20px", backgroundColor: "var(--bg-deep)" }}>
-          <div className="animate-fade-in" style={{ height: "100%", maxWidth: "1400px", margin: "0 auto" }}>
-            <Suspense fallback={<LoadingSpinner />}>
-              {seccionAdmin === "moderacion" && <PanelAdmin token={tokenJWT} />}
-              {seccionAdmin === "estadisticas" && <Estadisticas token={tokenJWT} />}
-              {seccionAdmin === "config" && <ConfiguracionMapa token={tokenJWT} />}
-              {seccionAdmin === "historico" && <HistoricoReportes token={tokenJWT} />}
-              {seccionAdmin === "exportar" && <ExportarReportes token={tokenJWT} />}
-            </Suspense>
+            <button
+              onClick={cerrarSesion}
+              className="admin-nav-btn"
+              style={{ color: "#ef4444" }}
+            >
+              <LogOut size={15} color="#ef4444" />
+              <span>Cerrar Sesión</span>
+            </button>
           </div>
-        </main>
+        </aside>
       </div>
     );
   }
@@ -307,9 +423,9 @@ function App() {
             width: "34px",
             height: "34px",
             borderRadius: "10px",
-            background: "rgba(255, 255, 255, 0.08)",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
-            color: "#ffffff",
+            background: "var(--adm-accent-bg)",
+            border: "1px solid var(--adm-accent-border)",
+            color: "var(--adm-accent)",
           }}
         >
           <Shield size={18} />
@@ -321,13 +437,13 @@ function App() {
               fontSize: "15px",
               fontWeight: 700,
               letterSpacing: "-0.3px",
-              color: "#ffffff",
+              color: "var(--adm-text)",
               lineHeight: "1.2",
             }}
           >
             Mapa de Inseguridad
           </h1>
-          <span className="hud-subtitulo" style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500 }}>
+          <span className="hud-subtitulo" style={{ fontSize: "11px", color: "var(--adm-muted)", fontWeight: 500 }}>
             Los Mochis • Monitoreo Ciudadano
           </span>
         </div>
@@ -335,16 +451,24 @@ function App() {
 
       {/* ── BOTONES DE ACCIÓN FLOTANTES (Esquina superior derecha) ── */}
       <div className="animate-fade-in hud-acciones">
-        <button 
-          onClick={() => setAlertasAbierto(true)} 
+        <button
+          onClick={() => cambiarTemaGlobal(temaAdmin === "noche" ? "claro" : "noche")}
+          className="btn-action"
+          title={temaAdmin === "noche" ? "Cambiar a Modo Claro" : "Cambiar a Modo Noche (Oliva)"}
+        >
+          {temaAdmin === "noche" ? <Sun size={15} color="var(--adm-accent)" /> : <Moon size={15} color="var(--adm-accent)" />}
+          <span className="hide-mobile">{temaAdmin === "noche" ? "Modo Claro" : "Noche"}</span>
+        </button>
+        <button
+          onClick={() => setAlertasAbierto(true)}
           className="btn-action"
           title="Alertas de Zona por correo"
         >
           <Bell size={15} />
           <span className="hide-mobile">Alertas</span>
         </button>
-        <button 
-          onClick={() => setEmergenciasAbierto(true)} 
+        <button
+          onClick={() => setEmergenciasAbierto(true)}
           className="btn-action"
           title="Directorio de Números de Emergencia"
         >
@@ -364,8 +488,8 @@ function App() {
 
       {/* ── BOTÓN FLOTANTE DESTACADO (FAB) "+ Reportar Incidente" ── */}
       <div className="hud-fab-wrap">
-        <button 
-          onClick={manejarClickReportar} 
+        <button
+          onClick={manejarClickReportar}
           className="btn-fab-reportar animate-fade-in"
           title="Reportar nuevo incidente en tu ubicación"
         >

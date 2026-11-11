@@ -167,8 +167,10 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
           maxWidth: "480px",
           padding: "30px",
           position: "relative",
-          background: "#1e293b",
-          border: "1px solid #334155",
+          borderRadius: "16px",
+          background: "var(--adm-card)",
+          border: "1px solid var(--adm-border)",
+          color: "var(--adm-text)",
         }}
       >
         {/* Encabezado */}
@@ -178,7 +180,7 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
             display: "flex", 
             alignItems: "center", 
             gap: "12px", 
-            color: "#f8fafc",
+            color: "var(--adm-text)",
             fontSize: "22px",
             fontWeight: 800,
             letterSpacing: "-0.5px"
@@ -190,7 +192,7 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
               width: "40px",
               height: "40px",
               borderRadius: "8px",
-              background: "#7c3aed",
+              background: "#059669",
               color: "white"
             }}>
               <Bell size={20} />
@@ -200,19 +202,17 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
           <button
             onClick={onClose}
             style={{ 
-              background: "rgba(255, 255, 255, 0.05)", 
-              border: "1px solid rgba(255, 255, 255, 0.1)", 
-              borderRadius: "10px",
+              background: "var(--adm-card-alt)", 
+              border: "1px solid var(--adm-border)", 
+              borderRadius: "8px",
               cursor: "pointer", 
-              color: "#94a3b8",
+              color: "var(--adm-muted)",
               width: "32px",
               height: "32px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center"
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"; }}
           >
             <X size={18} />
           </button>
@@ -231,30 +231,29 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
               width: "70px",
               height: "70px",
               borderRadius: "50%",
-              backgroundColor: "rgba(124, 58, 237, 0.15)",
-              border: "2px solid #7c3aed",
+              backgroundColor: "var(--adm-accent-bg)",
+              border: "2px solid var(--adm-accent)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               marginBottom: "20px",
-              color: "#a78bfa",
-              boxShadow: "0 0 20px rgba(124, 58, 237, 0.3)"
+              color: "var(--adm-accent)",
             }}>
               <Mail size={40} />
             </div>
-            <h3 style={{ color: "#f8fafc", margin: "0 0 10px 0", fontSize: "18px", fontWeight: "700" }}>
+            <h3 style={{ color: "var(--adm-text)", margin: "0 0 10px 0", fontSize: "18px", fontWeight: "700" }}>
               ¡Revisa tu correo!
             </h3>
-            <p style={{ color: "#94a3b8", fontSize: "14px", margin: "0 0 12px 0", lineHeight: "1.6", maxWidth: "340px" }}>
-              Te hemos enviado un <strong style={{ color: "#a78bfa" }}>correo de verificación</strong>. Haz clic en el enlace que encontrarás en tu bandeja de entrada para activar tu suscripción.
+            <p style={{ color: "var(--adm-muted)", fontSize: "14px", margin: "0 0 12px 0", lineHeight: "1.6", maxWidth: "340px" }}>
+              Te hemos enviado un <strong style={{ color: "var(--adm-accent)" }}>correo de verificación</strong>. Haz clic en el enlace que encontrarás en tu bandeja de entrada para activar tu suscripción.
             </p>
             <div style={{
-              backgroundColor: "rgba(250, 204, 21, 0.08)",
-              border: "1px solid rgba(250, 204, 21, 0.2)",
+              backgroundColor: "var(--adm-card-alt)",
+              border: "1px solid var(--adm-border)",
               borderRadius: "8px",
               padding: "10px 16px",
               fontSize: "12px",
-              color: "#fde68a",
+              color: "var(--adm-text)",
               lineHeight: "1.5",
               maxWidth: "340px"
             }}>
@@ -266,20 +265,20 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
             {/* Mensaje Informativo */}
             <div
               style={{
-                backgroundColor: "rgba(124, 58, 237, 0.1)",
-                border: "1px solid rgba(139, 92, 246, 0.2)",
-                borderRadius: "12px",
+                backgroundColor: "var(--adm-accent-bg)",
+                border: "1px solid var(--adm-accent-border)",
+                borderRadius: "10px",
                 padding: "15px 18px",
                 marginBottom: "22px",
                 fontSize: "13.5px",
-                color: "#ddd6fe",
+                color: "var(--adm-text)",
                 lineHeight: "1.6",
                 display: "flex",
                 gap: "12px",
                 alignItems: "flex-start"
               }}
             >
-              <Navigation size={18} style={{ color: "#a78bfa", marginTop: "2px", flexShrink: 0 }} />
+              <Navigation size={18} style={{ color: "var(--adm-accent)", marginTop: "2px", flexShrink: 0 }} />
               <div>
                 Utilizaremos tu <strong>ubicación en tiempo real</strong> para definir el centro de la zona de monitoreo. Te enviaremos un correo al instante si se reporta peligro dentro de tu radio seleccionado.
               </div>
@@ -288,8 +287,8 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
             <form onSubmit={manejarEnvio} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               {/* Campo Email */}
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontWeight: "600", fontSize: "14px", color: "#e2e8f0", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Mail size={15} color="#94a3b8" /> Correo electrónico de destino
+                <label style={{ fontWeight: "600", fontSize: "14px", color: "var(--adm-text)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Mail size={15} color="var(--adm-muted)" /> Correo electrónico de destino
                 </label>
                 <input
                   type="email"
@@ -299,7 +298,7 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
                   onChange={(e) => setCorreo(e.target.value)}
                   style={{
                     padding: "12px 14px",
-                    borderRadius: "10px",
+                    borderRadius: "8px",
                     fontSize: "14px",
                     width: "100%",
                     outline: "none"
@@ -309,7 +308,7 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
 
               {/* Campo Radio */}
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontWeight: "600", fontSize: "14px", color: "#e2e8f0" }}>
+                <label style={{ fontWeight: "600", fontSize: "14px", color: "var(--adm-text)" }}>
                   Radio de cobertura de alerta
                 </label>
                 <select
@@ -317,7 +316,7 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
                   onChange={(e) => setRadio(e.target.value)}
                   style={{
                     padding: "12px",
-                    borderRadius: "10px",
+                    borderRadius: "8px",
                     fontSize: "14px",
                     width: "100%",
                     cursor: "pointer",
@@ -340,14 +339,14 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
                     borderRadius: "10px",
                     padding: "12px 16px",
                     fontSize: "13px",
-                    color: "#fca5a5",
+                    color: "#ef4444",
                     display: "flex",
                     alignItems: "flex-start",
                     gap: "10px",
                     animation: "fadeIn 0.25s ease"
                   }}
                 >
-                  <AlertCircle size={18} style={{ color: "#f87171", flexShrink: 0, marginTop: "1px" }} />
+                  <AlertCircle size={18} style={{ color: "#ef4444", flexShrink: 0, marginTop: "1px" }} />
                   <span style={{ lineHeight: "1.5" }}>{error}</span>
                 </div>
               )}
@@ -357,10 +356,13 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="btn-premium btn-secondary"
+                  className="btn-premium"
                   style={{
-                    padding: "12px 20px",
-                    fontSize: "14px"
+                    padding: "11px 20px",
+                    fontSize: "14px",
+                    background: "var(--adm-card-alt)",
+                    border: "1px solid var(--adm-border)",
+                    color: "var(--adm-text)",
                   }}
                 >
                   Cancelar
@@ -368,10 +370,14 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
                 <button
                   type="submit"
                   disabled={cargando}
-                  className="btn-premium btn-purple"
+                  className="btn-premium"
                   style={{
-                    padding: "12px 24px",
+                    padding: "11px 24px",
                     fontSize: "14px",
+                    fontWeight: 700,
+                    background: "#059669",
+                    border: "1px solid #10b981",
+                    color: "#ffffff",
                     opacity: cargando ? 0.75 : 1,
                     cursor: cargando ? "not-allowed" : "pointer"
                   }}
@@ -384,7 +390,7 @@ const SuscripcionAlerta = ({ isOpen, onClose }) => {
           </>
         )}
 
-        <p style={{ marginTop: "24px", fontSize: "12px", color: "#64748b", textAlign: "center", lineHeight: "1.5" }}>
+        <p style={{ marginTop: "24px", fontSize: "12px", color: "var(--adm-muted)", textAlign: "center", lineHeight: "1.5" }}>
           Las notificaciones se envían de forma automática y anónima. Puedes desuscribirte en cualquier momento desde el enlace incluido al pie de cada alerta.
         </p>
       </div>

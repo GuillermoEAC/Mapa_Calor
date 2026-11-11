@@ -43,7 +43,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#09090b",
+        backgroundColor: "var(--adm-bg)",
         padding: "20px",
       }}
     >
@@ -52,11 +52,11 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
         style={{
           width: "100%",
           maxWidth: "380px",
-          backgroundColor: "#121215",
-          border: "1px solid #27272a",
-          borderRadius: "18px",
+          backgroundColor: "var(--adm-card)",
+          border: "1px solid var(--adm-border)",
+          borderRadius: "14px",
           padding: "32px 28px",
-          boxShadow: "0 20px 40px rgba(0, 0, 0, 0.6)",
+          boxShadow: "var(--glass-shadow)",
         }}
       >
         <div style={{ textAlign: "center", marginBottom: "24px" }}>
@@ -65,13 +65,13 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
               width: "48px",
               height: "48px",
               margin: "0 auto 14px auto",
-              borderRadius: "12px",
-              backgroundColor: "rgba(56, 189, 248, 0.12)",
-              border: "1px solid rgba(56, 189, 248, 0.25)",
+              borderRadius: "10px",
+              backgroundColor: "var(--adm-accent-bg)",
+              border: "1px solid var(--adm-accent-border)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#38bdf8",
+              color: "var(--adm-accent)",
             }}
           >
             <ShieldCheck size={24} />
@@ -81,7 +81,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
               margin: 0,
               fontSize: "19px",
               fontWeight: 700,
-              color: "#f4f4f5",
+              color: "var(--adm-text)",
             }}
           >
             Acceso Administrativo
@@ -90,7 +90,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
             style={{
               margin: "4px 0 0 0",
               fontSize: "12.5px",
-              color: "#71717a",
+              color: "var(--adm-muted)",
             }}
           >
             Panel de control y moderación
@@ -125,7 +125,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                 display: "block",
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "#a1a1aa",
+                color: "var(--adm-muted)",
                 marginBottom: "6px",
               }}
             >
@@ -138,7 +138,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                   left: "12px",
                   top: "50%",
                   transform: "translateY(-50%)",
-                  color: "#52525b",
+                  color: "var(--adm-muted)",
                   display: "flex",
                 }}
               >
@@ -155,10 +155,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                   width: "100%",
                   padding: "11px 12px 11px 38px",
                   fontSize: "13.5px",
-                  borderRadius: "10px",
-                  backgroundColor: "#18181b",
-                  borderColor: "#27272a",
-                  color: "#f4f4f5",
+                  borderRadius: "8px",
                 }}
               />
             </div>
@@ -170,7 +167,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                 display: "block",
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "#a1a1aa",
+                color: "var(--adm-muted)",
                 marginBottom: "6px",
               }}
             >
@@ -183,7 +180,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                   left: "12px",
                   top: "50%",
                   transform: "translateY(-50%)",
-                  color: "#52525b",
+                  color: "var(--adm-muted)",
                   display: "flex",
                 }}
               >
@@ -199,10 +196,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                   width: "100%",
                   padding: "11px 38px 11px 38px",
                   fontSize: "13.5px",
-                  borderRadius: "10px",
-                  backgroundColor: "#18181b",
-                  borderColor: "#27272a",
-                  color: "#f4f4f5",
+                  borderRadius: "8px",
                 }}
               />
               <button
@@ -215,7 +209,7 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
                   transform: "translateY(-50%)",
                   background: "transparent",
                   border: "none",
-                  color: "#71717a",
+                  color: "var(--adm-muted)",
                   cursor: "pointer",
                   display: "flex",
                   padding: "4px",
@@ -232,12 +226,12 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
             style={{
               marginTop: "6px",
               padding: "11px",
-              borderRadius: "10px",
-              backgroundColor: "#2563eb",
-              border: "1px solid #3b82f6",
+              borderRadius: "8px",
+              backgroundColor: "#059669",
+              border: "1px solid #10b981",
               color: "#ffffff",
               fontSize: "13.5px",
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: cargando ? "wait" : "pointer",
               display: "flex",
               alignItems: "center",
@@ -263,8 +257,9 @@ const LoginAdmin = ({ onLoginSuccess, onCancelar }) => {
               padding: "8px",
               background: "transparent",
               border: "none",
-              color: "#71717a",
+              color: "var(--adm-muted)",
               fontSize: "12.5px",
+              fontWeight: 600,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",

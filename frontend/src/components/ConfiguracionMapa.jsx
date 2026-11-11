@@ -62,16 +62,16 @@ const ConfiguracionMapa = ({ token }) => {
             margin: 0,
             fontSize: "18px",
             fontWeight: 700,
-            color: "#ffffff",
+            color: "var(--adm-text)",
             display: "flex",
             alignItems: "center",
             gap: "10px",
           }}
         >
-          <Settings size={22} color="#38bdf8" />
+          <Settings size={22} color="var(--adm-accent)" />
           <span>Configuración del Mapa de Calor</span>
         </h2>
-        <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
+        <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--adm-muted)" }}>
           Ajustes de cobertura e intensidad visual para los reportes ciudadanos.
         </p>
       </div>
@@ -115,24 +115,24 @@ const ConfiguracionMapa = ({ token }) => {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
         <div className="admin-card" style={{ padding: "22px", display: "flex", flexDirection: "column", gap: "14px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "#f4f4f5" }}>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--adm-text)" }}>
               Radio de Influencia
             </span>
             <span
               style={{
                 fontSize: "13px",
                 fontWeight: 700,
-                color: "#38bdf8",
-                backgroundColor: "rgba(56, 189, 248, 0.1)",
+                color: "var(--adm-accent)",
+                backgroundColor: "var(--adm-accent-bg)",
                 padding: "2px 8px",
                 borderRadius: "6px",
-                border: "1px solid rgba(56, 189, 248, 0.2)",
+                border: "1px solid var(--adm-accent-border)",
               }}
             >
               {config.radio} m
             </span>
           </div>
-          <p style={{ margin: 0, fontSize: "12px", color: "#71717a" }}>
+          <p style={{ margin: 0, fontSize: "12px", color: "var(--adm-muted)" }}>
             Tamaño de la huella térmica generada por cada incidente reportado.
           </p>
           <input
@@ -147,24 +147,24 @@ const ConfiguracionMapa = ({ token }) => {
 
         <div className="admin-card" style={{ padding: "22px", display: "flex", flexDirection: "column", gap: "14px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "#f4f4f5" }}>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--adm-text)" }}>
               Opacidad de Capa
             </span>
             <span
               style={{
                 fontSize: "13px",
                 fontWeight: 700,
-                color: "#38bdf8",
-                backgroundColor: "rgba(56, 189, 248, 0.1)",
+                color: "var(--adm-accent)",
+                backgroundColor: "var(--adm-accent-bg)",
                 padding: "2px 8px",
                 borderRadius: "6px",
-                border: "1px solid rgba(56, 189, 248, 0.2)",
+                border: "1px solid var(--adm-accent-border)",
               }}
             >
               {(config.opacidad * 100).toFixed(0)}%
             </span>
           </div>
-          <p style={{ margin: 0, fontSize: "12px", color: "#71717a" }}>
+          <p style={{ margin: 0, fontSize: "12px", color: "var(--adm-muted)" }}>
             Nivel de transparencia del mapa de calor sobre las calles.
           </p>
           <input
@@ -184,12 +184,12 @@ const ConfiguracionMapa = ({ token }) => {
           disabled={guardando}
           style={{
             padding: "10px 20px",
-            borderRadius: "10px",
-            backgroundColor: "#2563eb",
-            border: "1px solid #3b82f6",
+            borderRadius: "8px",
+            backgroundColor: "#059669",
+            border: "1px solid #10b981",
             color: "#ffffff",
             fontSize: "13.5px",
-            fontWeight: 600,
+            fontWeight: 700,
             cursor: guardando ? "wait" : "pointer",
             display: "inline-flex",
             alignItems: "center",
@@ -211,11 +211,11 @@ const ConfiguracionMapa = ({ token }) => {
         </button>
       </div>
 
-      <div className="admin-card" style={{ padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start", backgroundColor: "rgba(56, 189, 248, 0.05)", border: "1px solid rgba(56, 189, 248, 0.15)" }}>
-        <Info size={20} color="#38bdf8" style={{ marginTop: "2px", flexShrink: 0 }} />
+      <div className="admin-card" style={{ padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start", backgroundColor: "var(--adm-accent-bg)", border: "1px solid var(--adm-accent-border)" }}>
+        <Info size={20} color="var(--adm-accent)" style={{ marginTop: "2px", flexShrink: 0 }} />
         <div>
-          <h4 style={{ margin: "0 0 4px 0", color: "#f4f4f5", fontSize: "14px", fontWeight: 600 }}>Aplicación en Tiempo Real</h4>
-          <p style={{ margin: 0, color: "#a1a1aa", fontSize: "13px", lineHeight: "1.5" }}>
+          <h4 style={{ margin: "0 0 4px 0", color: "var(--adm-text)", fontSize: "14px", fontWeight: 700 }}>Aplicación en Tiempo Real</h4>
+          <p style={{ margin: 0, color: "var(--adm-muted)", fontSize: "13px", lineHeight: "1.5" }}>
             Los cambios realizados en el radio de influencia y opacidad se reflejarán instantáneamente en el mapa público. Te recomendamos realizar ajustes moderados para mantener la legibilidad de las calles y reportes individuales.
           </p>
         </div>

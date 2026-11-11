@@ -53,7 +53,10 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
           maxWidth: "460px",
           padding: "28px",
           position: "relative",
-          borderRadius: "22px",
+          borderRadius: "16px",
+          background: "var(--adm-card)",
+          border: "1px solid var(--adm-border)",
+          color: "var(--adm-text)",
         }}
       >
         {/* Encabezado */}
@@ -63,7 +66,7 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
             display: "flex", 
             alignItems: "center", 
             gap: "12px", 
-            color: "#f8fafc",
+            color: "var(--adm-text)",
             fontSize: "20px",
             fontWeight: 800,
             letterSpacing: "-0.5px"
@@ -85,19 +88,17 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
           <button 
             onClick={onClose} 
             style={{ 
-              background: "rgba(255, 255, 255, 0.05)", 
-              border: "1px solid rgba(255, 255, 255, 0.1)", 
-              borderRadius: "10px",
+              background: "var(--adm-card-alt)", 
+              border: "1px solid var(--adm-border)", 
+              borderRadius: "8px",
               cursor: "pointer", 
-              color: "#94a3b8",
+              color: "var(--adm-muted)",
               width: "32px",
               height: "32px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center"
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#f8fafc"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"; }}
           >
             <X size={18} />
           </button>
@@ -106,20 +107,20 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
         {/* Mensaje de anonimato */}
         <div
           style={{
-            backgroundColor: "rgba(16, 185, 129, 0.1)",
-            border: "1px solid rgba(16, 185, 129, 0.2)",
-            borderRadius: "12px",
+            backgroundColor: "var(--adm-accent-bg)",
+            border: "1px solid var(--adm-accent-border)",
+            borderRadius: "10px",
             padding: "12px 16px",
             marginBottom: "20px",
             fontSize: "13px",
-            color: "#d1fae5",
+            color: "var(--adm-text)",
             lineHeight: "1.5",
             display: "flex",
             gap: "10px",
             alignItems: "center"
           }}
         >
-          <ShieldCheck size={18} style={{ color: "#34d399", flexShrink: 0 }} />
+          <ShieldCheck size={18} style={{ color: "var(--adm-accent)", flexShrink: 0 }} />
           <span>Este reporte es <strong>100% anónimo</strong>. Solo guardaremos la ubicación geográfica y la descripción del incidente.</span>
         </div>
 
@@ -129,34 +130,34 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
         >
           {/* Tipo de incidente */}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <label style={{ fontWeight: "600", fontSize: "14px", color: "#e2e8f0" }}>Tipo de Incidente:</label>
+            <label style={{ fontWeight: "600", fontSize: "14px", color: "var(--adm-text)" }}>Tipo de Incidente:</label>
             <select
               value={tipoIncidente}
               onChange={(e) => setTipoIncidente(e.target.value)}
               style={{
                 padding: "12px",
-                borderRadius: "10px",
+                borderRadius: "8px",
                 fontSize: "14px",
                 width: "100%",
                 cursor: "pointer",
                 outline: "none"
               }}
             >
-              <option value="robo" style={{ background: "#18181b" }}>Robo / Asalto</option>
-              <option value="vandalismo" style={{ background: "#18181b" }}>Vandalismo</option>
-              <option value="alumbrado" style={{ background: "#18181b" }}>Fallo de Alumbrado</option>
-              <option value="sospechoso" style={{ background: "#18181b" }}>Actividad Sospechosa</option>
-              <option value="acoso" style={{ background: "#18181b" }}>Acoso / Zona Insegura</option>
-              <option value="fuga_agua" style={{ background: "#18181b" }}>Fuga de Agua / Drenaje</option>
-              <option value="accidente" style={{ background: "#18181b" }}>Accidente Vehicular</option>
-              <option value="incendio" style={{ background: "#18181b" }}>Incendio / Quema de Maleza</option>
-              <option value="fuga_gas" style={{ background: "#18181b" }}>Fuga de Gas</option>
+              <option value="robo">Robo / Asalto</option>
+              <option value="vandalismo">Vandalismo</option>
+              <option value="alumbrado">Fallo de Alumbrado</option>
+              <option value="sospechoso">Actividad Sospechosa</option>
+              <option value="acoso">Acoso / Zona Insegura</option>
+              <option value="fuga_agua">Fuga de Agua / Drenaje</option>
+              <option value="accidente">Accidente Vehicular</option>
+              <option value="incendio">Incendio / Quema de Maleza</option>
+              <option value="fuga_gas">Fuga de Gas</option>
             </select>
           </div>
 
           {/* Descripción */}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <label style={{ fontWeight: "600", fontSize: "14px", color: "#e2e8f0" }}>Descripción detallada (Opcional):</label>
+            <label style={{ fontWeight: "600", fontSize: "14px", color: "var(--adm-text)" }}>Descripción detallada (Opcional):</label>
             <textarea
               rows="3"
               placeholder="Ej. Dos sujetos con vestimenta oscura merodeando en motocicleta..."
@@ -164,7 +165,7 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
               onChange={(e) => setDescripcion(e.target.value)}
               style={{
                 padding: "12px",
-                borderRadius: "10px",
+                borderRadius: "8px",
                 fontSize: "14px",
                 width: "100%",
                 resize: "none",
@@ -185,10 +186,13 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
             <button
               type="button"
               onClick={onClose}
-              className="btn-premium btn-secondary"
+              className="btn-premium"
               style={{
-                padding: "12px 20px",
-                fontSize: "14px"
+                padding: "11px 20px",
+                fontSize: "14px",
+                background: "var(--adm-card-alt)",
+                border: "1px solid var(--adm-border)",
+                color: "var(--adm-text)",
               }}
             >
               Cancelar
@@ -197,7 +201,7 @@ const ModalReporte = ({ isOpen, onClose, onSubmit, ubicacion }) => {
               type="submit"
               className="btn-premium btn-danger"
               style={{
-                padding: "12px 24px",
+                padding: "11px 24px",
                 fontSize: "14px",
                 fontWeight: "700"
               }}

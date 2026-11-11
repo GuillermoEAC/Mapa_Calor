@@ -59,16 +59,16 @@ const ExportarReportes = ({ token }) => {
             margin: 0,
             fontSize: "18px",
             fontWeight: 700,
-            color: "#ffffff",
+            color: "var(--adm-text)",
             display: "flex",
             alignItems: "center",
             gap: "10px",
           }}
         >
-          <FileSpreadsheet size={22} color="#38bdf8" />
+          <FileSpreadsheet size={22} color="var(--adm-accent)" />
           <span>Exportación de Datos</span>
         </h2>
-        <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#a1a1aa" }}>
+        <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--adm-muted)" }}>
           Genera un archivo CSV estructurado para Excel con los filtros seleccionados.
         </p>
       </div>
@@ -114,14 +114,14 @@ const ExportarReportes = ({ token }) => {
       )}
 
       <div className="admin-card" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#f4f4f5", fontSize: "14px", fontWeight: 600 }}>
-          <Filter size={16} color="#38bdf8" />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--adm-text)", fontSize: "14px", fontWeight: 700 }}>
+          <Filter size={16} color="var(--adm-accent)" />
           <span>Criterios de Filtrado</span>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
           <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#a1a1aa", marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--adm-muted)", marginBottom: "6px" }}>
               Estado
             </label>
             <select
@@ -132,9 +132,6 @@ const ExportarReportes = ({ token }) => {
                 padding: "9px 12px",
                 fontSize: "13px",
                 borderRadius: "8px",
-                backgroundColor: "#18181b",
-                borderColor: "#27272a",
-                color: "#f4f4f5",
               }}
             >
               <option value="todos">Todos los Estados</option>
@@ -146,7 +143,7 @@ const ExportarReportes = ({ token }) => {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#a1a1aa", marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--adm-muted)", marginBottom: "6px" }}>
               Categoría
             </label>
             <select
@@ -157,9 +154,6 @@ const ExportarReportes = ({ token }) => {
                 padding: "9px 12px",
                 fontSize: "13px",
                 borderRadius: "8px",
-                backgroundColor: "#18181b",
-                borderColor: "#27272a",
-                color: "#f4f4f5",
               }}
             >
               <option value="todos">Todas las Categorías</option>
@@ -167,11 +161,16 @@ const ExportarReportes = ({ token }) => {
               <option value="2">Vandalismo</option>
               <option value="3">Fallo de Alumbrado</option>
               <option value="4">Actividad Sospechosa</option>
+              <option value="5">Acoso / Zona Insegura</option>
+              <option value="6">Fuga de Agua</option>
+              <option value="7">Accidente Vehicular</option>
+              <option value="8">Incendio / Quema</option>
+              <option value="9">Fuga de Gas</option>
             </select>
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#a1a1aa", marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--adm-muted)", marginBottom: "6px" }}>
               Desde
             </label>
             <input
@@ -183,15 +182,12 @@ const ExportarReportes = ({ token }) => {
                 padding: "9px 12px",
                 fontSize: "13px",
                 borderRadius: "8px",
-                backgroundColor: "#18181b",
-                borderColor: "#27272a",
-                color: "#f4f4f5",
               }}
             />
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#a1a1aa", marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--adm-muted)", marginBottom: "6px" }}>
               Hasta
             </label>
             <input
@@ -203,26 +199,23 @@ const ExportarReportes = ({ token }) => {
                 padding: "9px 12px",
                 fontSize: "13px",
                 borderRadius: "8px",
-                backgroundColor: "#18181b",
-                borderColor: "#27272a",
-                color: "#f4f4f5",
               }}
             />
           </div>
         </div>
 
-        <div style={{ paddingTop: "12px", borderTop: "1px solid rgba(255, 255, 255, 0.06)" }}>
+        <div style={{ paddingTop: "12px", borderTop: "1px solid var(--adm-border)" }}>
           <button
             onClick={manejarDescarga}
             disabled={descargando}
             style={{
               padding: "10px 22px",
-              borderRadius: "10px",
-              backgroundColor: "#2563eb",
-              border: "1px solid #3b82f6",
+              borderRadius: "8px",
+              backgroundColor: "#059669",
+              border: "1px solid #10b981",
               color: "#ffffff",
               fontSize: "13.5px",
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: descargando ? "wait" : "pointer",
               display: "inline-flex",
               alignItems: "center",
@@ -245,11 +238,11 @@ const ExportarReportes = ({ token }) => {
         </div>
       </div>
 
-      <div className="admin-card" style={{ padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start", backgroundColor: "rgba(56, 189, 248, 0.05)", border: "1px solid rgba(56, 189, 248, 0.15)" }}>
-        <Info size={20} color="#38bdf8" style={{ marginTop: "2px", flexShrink: 0 }} />
+      <div className="admin-card" style={{ padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start", backgroundColor: "var(--adm-accent-bg)", border: "1px solid var(--adm-accent-border)" }}>
+        <Info size={20} color="var(--adm-accent)" style={{ marginTop: "2px", flexShrink: 0 }} />
         <div>
-          <h4 style={{ margin: "0 0 4px 0", color: "#f4f4f5", fontSize: "14px", fontWeight: 600 }}>Información sobre la Exportación</h4>
-          <p style={{ margin: 0, color: "#a1a1aa", fontSize: "13px", lineHeight: "1.5" }}>
+          <h4 style={{ margin: "0 0 4px 0", color: "var(--adm-text)", fontSize: "14px", fontWeight: 700 }}>Información sobre la Exportación</h4>
+          <p style={{ margin: 0, color: "var(--adm-muted)", fontSize: "13px", lineHeight: "1.5" }}>
             El archivo CSV generado está optimizado para su apertura directa en Microsoft Excel y otras hojas de cálculo. Todos los datos sensibles o personales son procesados bajo las normativas de privacidad antes de su descarga.
           </p>
         </div>
