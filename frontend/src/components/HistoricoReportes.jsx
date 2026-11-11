@@ -16,6 +16,13 @@ const TIPOS_COLORES = {
   "Fuga de Gas": { bg: "rgba(202, 138, 4, 0.14)", text: "#ca8a04", border: "rgba(202, 138, 4, 0.35)" },
 };
 
+const formatearFechaDMA = (fecha) => {
+  const d = new Date(fecha);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
+};
+
 const HistoricoReportes = ({ token }) => {
   const [reportes, setReportes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -314,7 +321,7 @@ const HistoricoReportes = ({ token }) => {
                       <td style={{ whiteSpace: "nowrap", color: "var(--adm-muted)", fontSize: "12.5px", fontWeight: 500 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                           <Calendar size={13} color="var(--adm-muted)" />
-                          <span>{new Date(rep.fecha_registro).toLocaleDateString()}</span>
+                          <span>{formatearFechaDMA(rep.fecha_registro)}</span>
                         </div>
                       </td>
                       <td style={{ whiteSpace: "nowrap" }}>

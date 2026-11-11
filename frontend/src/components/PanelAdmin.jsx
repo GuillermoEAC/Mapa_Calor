@@ -69,6 +69,13 @@ const ControladorMiniMapa = ({ reporteActivo, modoOscuro }) => {
   return null;
 };
 
+const formatearFechaHoraDMA = (fecha) => {
+  const d = new Date(fecha);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 const PanelAdmin = ({ token }) => {
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -850,16 +857,7 @@ const PanelAdmin = ({ token }) => {
                           <td style={{ whiteSpace: "nowrap", color: "var(--adm-muted)", fontSize: "12px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                               <Clock size={12} color="var(--adm-muted)" />
-                              <span>
-                                {new Date(rep.fecha_registro).toLocaleDateString("es-MX", {
-                                  day: "2-digit",
-                                  month: "short",
-                                })}{" "}
-                                {new Date(rep.fecha_registro).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </span>
+                              <span>{formatearFechaHoraDMA(rep.fecha_registro)}</span>
                             </div>
                           </td>
                           <td

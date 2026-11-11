@@ -347,12 +347,21 @@ const Estadisticas = ({ token }) => {
       };
     });
 
-    // 7. Evolución temporal (por día o por mes)
-    const evolucionTemporal = (datos.porPeriodo || []).map((p) => ({
-      periodo: p.periodo,
-      nombreCompleto: `Periodo: ${p.periodo}`,
-      total: Number(p.total) || 0,
-    }));
+    // 7. Evolución temporal (en formato día-mes-año o mes-año)
+    const evolucionTemporal = (datos.porPeriodo || []).map((p) => {
+      const partes = String(p.periodo || "").split("-");
+      let etiqueta = p.periodo;
+      if (partes.length === 3) {
+        etiqueta = `${partes[2]}-${partes[1]}-${partes[0]}`; // DD-MM-AAAA
+      } else if (partes.length === 2) {
+        etiqueta = `${partes[1]}-${partes[0]}`; // MM-AAAA
+      }
+      return {
+        periodo: etiqueta,
+        nombreCompleto: `Fecha: ${etiqueta}`,
+        total: Number(p.total) || 0,
+      };
+    });
 
     // 8. Estado de Moderación
     const coloresEstado = {
@@ -580,7 +589,7 @@ const Estadisticas = ({ token }) => {
             </h3>
           </div>
           <span style={{ fontSize: "12px", color: "#71717a" }}>
-            {rango === "todos" || rango === "anio" ? "Agrupado por mes (AAAA-MM)" : "Agrupado por día (AAAA-MM-DD)"}
+            {rango === "todos" || rango === "anio" ? "Agrupado por mes (MM-AAAA)" : "Agrupado por día (DD-MM-AAAA)"}
           </span>
         </div>
         <div style={{ height: "270px" }}>

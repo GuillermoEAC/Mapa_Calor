@@ -105,11 +105,13 @@ const MAX_BOUNDS = [
   [26.1, -108.7],
 ];
 
-// Formateador de fechas único reutilizable (mucho más rápido que toLocaleString por marcador)
-const FECHA_FORMATTER = new Intl.DateTimeFormat("es-MX", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
+// Formateador de fechas en formato día-mes-año (DD-MM-AAAA HH:mm)
+const formatearFechaDMA = (ts) => {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 const MapRefRegister = memo(({ setMap }) => {
   const map = useMap();
@@ -488,7 +490,7 @@ const MapaInteractivo = ({ ubicacionTemporal, onMapClick, compartirParams }) => 
                 tipo: p.id_tipo,
                 tipoStr: String(p.id_tipo),
                 ts,
-                fechaStr: !isNaN(ts) ? FECHA_FORMATTER.format(ts) : "",
+                fechaStr: !isNaN(ts) ? formatearFechaDMA(ts) : "",
               });
             }
           }

@@ -483,7 +483,7 @@ const exportarReportes = async (req, res) => {
         const d = new Date(r.fecha_registro);
         if (!isNaN(d.getTime())) {
           const pad = (n) => String(n).padStart(2, "0");
-          fechaStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+          fechaStr = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
         }
       }
 
